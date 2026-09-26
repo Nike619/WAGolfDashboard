@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Open tee times and ground conditions across Washington golf courses, updated every morning.">
+<title>Open Tee Sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F3F5F0; --surface:#FFFFFF; --sunk:#E9EDE5; --ink:#18201B; --muted:#5F6B63; --line:#D6DDD2;
+  --accent:#1E5B3A; --accent-ink:#FFFFFF; --accent-soft:#DCEBDF; --sand:#B8893A; --sand-soft:#F4E9D2;
+  --warn:#A4461F; --warn-soft:#F6E1D6; --empty:#9AA39C;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"IBM Plex Sans",-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;--bg:#111612;--surface:#182019;--sunk:#0D110E;--ink:#E6ECE5;--muted:#98A59B;--line:#2A342C;
+  --accent:#6FC08F;--accent-ink:#0C1A11;--accent-soft:#1D3526;--sand:#D9B065;--sand-soft:#33291A;--warn:#E48A63;--warn-soft:#3A2219;--empty:#5D685F;}}
+:root[data-theme="dark"]{
+  color-scheme:dark;--bg:#111612;--surface:#182019;--sunk:#0D110E;--ink:#E6ECE5;--muted:#98A59B;--line:#2A342C;
+  --accent:#6FC08F;--accent-ink:#0C1A11;--accent-soft:#1D3526;--sand:#D9B065;--sand-soft:#33291A;--warn:#E48A63;--warn-soft:#3A2219;--empty:#5D685F;}
+*{box-sizing:border-box}
+html{color-scheme:light}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+img{max-width:100%}[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--body);padding:24px 20px 48px}
+.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1,h2{font-family:var(--display);font-weight:700;letter-spacing:.01em;margin:0;text-wrap:balance}
+h1{font-size:40px;line-height:1;text-transform:uppercase}
+h2{font-size:22px;text-transform:uppercase;letter-spacing:.04em}
+.label{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+header{display:flex;flex-wrap:wrap;gap:16px 24px;align-items:flex-end;justify-content:space-between;border-bottom:2px solid var(--ink);padding-bottom:16px}
+.status{display:flex;flex-direction:column;gap:2px;color:var(--muted);font-size:13px}
+.status b{color:var(--ink);font-weight:500}
+.hdr-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:8px 14px;font-weight:500}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn:disabled{opacity:.55;cursor:default}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:3px 9px;border-radius:99px;background:var(--sunk);color:var(--muted);font-weight:500}
+.pill.run{background:var(--sand-soft);color:var(--sand)}
+.pill.err{background:var(--warn-soft);color:var(--warn)}
+.pill.ok{background:var(--accent-soft);color:var(--accent)}
+.dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+
+.filters{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:4px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:none;padding:6px 12px;font-size:14px;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+select,input[type=text],input[type=url],input[type=number]{border:1px solid var(--line);border-radius:6px;background:var(--surface);padding:6px 10px;font-size:14px}
+
+.best{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.bday{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;text-align:left}
+.bday:hover{border-color:var(--accent)}
+.bday .d{font-family:var(--display);font-weight:600;font-size:17px;text-transform:uppercase;letter-spacing:.03em}
+.bday .p{font-family:var(--mono);font-size:20px;color:var(--accent);font-weight:500}
+.bday .c{font-size:12px;color:var(--muted);line-height:1.35}
+.bday.none .p{color:var(--empty)}
+
+.card-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+table.sheet{border-collapse:collapse;width:100%;min-width:760px}
+.sheet th,.sheet td{border-bottom:1px solid var(--line);padding:0}
+.sheet thead th{font-family:var(--display);font-weight:600;font-size:15px;text-transform:uppercase;letter-spacing:.04em;padding:10px 8px;text-align:center;background:var(--sunk);border-left:1px solid var(--line)}
+.sheet thead th:first-child{text-align:left;padding-left:14px;border-left:0}
+.sheet thead th small{display:block;font-family:var(--mono);font-weight:400;font-size:11px;color:var(--muted);letter-spacing:0}
+.sheet tbody tr:last-child td,.sheet tbody tr:last-child th{border-bottom:0}
+.sheet .course{padding:12px 14px;text-align:left;min-width:190px;vertical-align:top}
+.course .n{font-weight:600}
+.course .m{font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:2px}
+.sheet td{border-left:1px solid var(--line);text-align:center;vertical-align:middle}
+.cell{width:100%;min-height:62px;border:0;background:none;padding:8px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.cell:hover{background:var(--accent-soft)}
+.cell .cnt{font-family:var(--mono);font-size:18px;font-weight:500;font-variant-numeric:tabular-nums}
+.cell .from{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.cell.zero .cnt{color:var(--empty)}
+.cell.low{box-shadow:inset 0 -3px 0 var(--sand)}
+.cell.cheapest .from{color:var(--accent);font-weight:600}
+.cell[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.cell[aria-pressed="true"] .from,.cell[aria-pressed="true"] .cnt{color:var(--accent-ink)}
+.cell.na{color:var(--empty);font-size:12px;cursor:default}
+.cell.na:hover{background:none}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:14px;height:10px;border-radius:2px;display:inline-block}
+
+.detail{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.detail-h{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px}
+.times{display:flex;flex-wrap:wrap;gap:8px}
+.t{border:1px solid var(--line);border-radius:6px;padding:6px 10px;display:flex;gap:8px;align-items:baseline;font-variant-numeric:tabular-nums;background:var(--bg)}
+.t .tt{font-family:var(--mono);font-weight:500}
+.t .tp{font-size:13px;color:var(--muted)}
+.t.deal{border-color:var(--accent)}
+.t.deal .tp{color:var(--accent);font-weight:600}
+a{color:var(--accent)}
+.empty{color:var(--muted);font-size:14px}
+
+.courses{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.cc{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.cc-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.cc .n{font-weight:600}
+.cc .m{font-size:12px;color:var(--muted);word-break:break-word}
+.linkbtn{border:0;background:none;padding:0;color:var(--muted);font-size:13px;text-decoration:underline}
+.linkbtn.danger{color:var(--warn)}
+form.add{background:var(--sunk);border-radius:8px;padding:14px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+form.add .field{flex:1 1 200px}
+form.add input{width:100%}
+.note{font-size:13px;color:var(--muted);max-width:68ch}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:14px;max-width:calc(100% - 32px)}
+.wet{font-size:11px;letter-spacing:.04em;text-transform:uppercase;font-weight:600;display:inline-flex;align-items:center;gap:4px}
+.wet i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.w-dry{color:var(--accent)} .w-dry i{background:var(--accent)}
+.w-damp{color:var(--muted)} .w-damp i{background:var(--muted)}
+.w-soft{color:var(--sand)} .w-soft i{background:var(--sand)}
+.w-soggy{color:var(--warn)} .w-soggy i{background:var(--warn)}
+.cell[aria-pressed="true"] .wet{color:var(--accent-ink)} .cell[aria-pressed="true"] .wet i{background:var(--accent-ink)}
+.drain{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.dc{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.dc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.meter{display:flex;gap:3px}
+.meter span{width:16px;height:8px;border-radius:2px;background:var(--sunk)}
+.meter span.on{background:var(--accent)}
+.rainrow{display:flex;gap:4px;align-items:flex-end;height:44px}
+.rainrow div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;height:100%}
+.rainrow b{display:block;width:100%;max-width:18px;background:#5B84A6;border-radius:2px 2px 0 0;min-height:1px}
+.rainrow b.fc{background:transparent;border:1px dashed #5B84A6;border-bottom:0}
+.rainrow small{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.src{font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 10px}
+.dc p{margin:0;font-size:14px}
+.rank{font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 5px;margin-right:6px;vertical-align:1px}
+.course .n button,.dir .n button{border:0;background:none;padding:0;font:inherit;font-weight:600;text-align:left;color:var(--ink);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.course .n button:hover,.dir .n button:hover{text-decoration-color:var(--accent)}
+table.dir{border-collapse:collapse;width:100%;min-width:760px;font-size:14px}
+.dir th,.dir td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.dir thead th{background:var(--sunk);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.dir tbody tr:last-child td{border-bottom:0}
+.dir .m{font-size:12px;color:var(--muted)}
+.dir td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.phone{font-family:var(--mono);font-size:13px;user-select:all;white-space:nowrap}
+.hint{font-size:12px;color:var(--muted)}
+details.manage{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 16px}
+details.manage summary{cursor:pointer;font-weight:600}
+.mlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:6px 18px;margin:12px 0}
+.mrow{display:flex;justify-content:space-between;gap:8px;font-size:13px;border-bottom:1px dashed var(--line);padding:4px 0}
+.mrow span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cdet{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:700px){.cdet{grid-template-columns:1fr}}
+.hidden-pub [data-pub]{display:none}
+section{display:flex;flex-direction:column;gap:12px}
+.sec-h{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px}
+@media (max-width:560px){h1{font-size:32px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head><body>
+
+<div class="wrap" id="app">
+  <header>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <span class="label">Washington · 18 holes</span>
+      <h1>Open Tee Sheet</h1>
+    </div>
+    <div class="hdr-actions">
+      <div class="status" id="status"><span>Loading…</span></div>
+      <a class="btn primary" id="refresh" target="_blank" rel="noopener" href="#">Run a check</a>
+    </div>
+  </header>
+
+  <div class="filters">
+    <div class="field"><span class="label">Courses</span>
+      <div class="seg" id="access" role="group" aria-label="Public or private">
+        <button type="button" data-v="public">Public</button><button type="button" data-v="private">Private</button>
+      </div></div>
+    <div class="field"><label class="label" for="region">Region</label>
+      <select id="region"><option value="">All of Washington</option><option>Seattle/Eastside</option><option>South Sound</option><option>North Sound</option><option>Kitsap/Olympic</option><option>Southwest WA</option><option>Central WA</option><option>Eastern WA</option></select></div>
+    <div class="field"><label class="label" for="sort">Sort</label>
+      <select id="sort"><option value="rank">Ranking</option><option value="dry">Driest today</option><option value="price" data-pub>Cheapest this week</option></select></div>
+    <div class="field" data-pub><span class="label">Players</span>
+      <div class="seg" id="players" role="group" aria-label="Players">
+        <button type="button" data-v="1">1</button><button type="button" data-v="2">2</button><button type="button" data-v="3">3</button><button type="button" data-v="4">4</button>
+      </div></div>
+    <div class="field" data-pub><span class="label">Tee off</span>
+      <div class="seg" id="win" role="group" aria-label="Time window">
+        <button type="button" data-v="any">Any time</button><button type="button" data-v="am">Before 11</button><button type="button" data-v="mid">11–2</button><button type="button" data-v="pm">After 2</button>
+      </div></div>
+    <div class="field" data-pub><label class="label" for="maxp">Max per player</label>
+      <select id="maxp"><option value="0">No limit</option><option value="60">$60</option><option value="75">$75</option><option value="100">$100</option><option value="125">$125</option></select></div>
+  </div>
+
+  <section>
+    <div class="sec-h"><h2 id="besth">Driest course each day</h2>
+      <div class="seg" id="bestmode" role="group" aria-label="Pick by" data-pub><button type="button" data-v="dry">Driest</button><button type="button" data-v="price">Cheapest</button></div></div>
+    <div class="best" id="best"></div>
+    <span class="label" id="bestnote"></span>
+  </section>
+
+  <div class="detail" id="cdetail" hidden></div>
+
+  <section data-pub>
+    <div class="sec-h"><h2>Tee sheet</h2>
+      <div class="legend"><span><i class="sw" style="background:var(--accent)"></i>Lowest price that day</span><span><i class="sw" style="background:var(--sand)"></i>3 or fewer left</span><span class="wet w-dry"><i></i>Dry</span><span class="wet w-damp"><i></i>Damp</span><span class="wet w-soft"><i></i>Soft</span><span class="wet w-soggy"><i></i>Soggy</span></div></div>
+    <div class="card-scroll"><table class="sheet" id="sheet"></table></div>
+    <div class="detail" id="detail" hidden></div>
+  </section>
+
+  <section data-pub>
+    <div class="sec-h"><h2>Book directly</h2><span class="label">No readable online tee sheet</span></div>
+    <p class="note">These courses use booking systems the dashboard can't read yet, or need a login to see times. Ground conditions still update every morning.</p>
+    <div class="card-scroll"><table class="dir" id="linkonly"></table></div>
+  </section>
+
+  <section id="privsec">
+    <div class="sec-h"><h2>Private clubs</h2><span class="label">Members and guests · call the pro shop</span></div>
+    <p class="note">Private clubs don't publish tee times. Use this to see which club is playing driest before you ask your member friend or set up reciprocal play. Tap a club for its drainage notes and rain.</p>
+    <div class="card-scroll"><table class="dir" id="private"></table></div>
+  </section>
+
+  <section>
+    <p class="note">Drainage scores (1–5) come from golfer reviews and course-construction write-ups; many private and small-town clubs have little public discussion and default to 3 with low confidence. Ground condition combines the score with rain over the three days before and on the day itself. It is an estimate; call ahead after a big storm.</p>
+    <details class="manage">
+      <summary id="ccount">Manage courses</summary>
+      <div class="mlist" id="courses"></div>
+      <p class="note">To add, remove or pause a course, edit <code>data/courses.json</code> in the GitHub repo (<a id="editlink" target="_blank" rel="noopener" href="#">open it on GitHub ↗</a>). A course needs a name, <code>access</code> ("public" or "private"), <code>lat</code>/<code>lon</code>, and for tee times a <code>platform</code> with its <code>params</code>. Set <code>"active": false</code> to pause one. Tee times and rain update every morning at about 6:50 AM Pacific; "Run a check" starts one now.</p>
+    </details>
+  </section>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const state={settings:{players:2,days:7},courses:[],results:{},weather:{},run:null,sel:null,csel:null,loaded:false};
+const pref={win:'any',maxp:0,best:'dry',access:'public',region:'',sort:'rank',players:2};
+try{Object.assign(pref,JSON.parse(localStorage.getItem('teeprefs')||'{}'))}catch(e){}
+const savePref=()=>{try{localStorage.setItem('teeprefs',JSON.stringify(pref))}catch(e){}};
+
+
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function todayPT(){return new Date().toLocaleDateString('en-CA',{timeZone:'America/Los_Angeles'})}
+function shift(iso,n){const d=new Date(iso+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)}
+function dateList(){const t=todayPT(),n=state.settings.days||7;return [...Array(n)].map((_,i)=>shift(t,i))}
+function dLabel(iso,short){const d=new Date(iso+'T12:00:00Z');return d.toLocaleDateString('en-US',{timeZone:'UTC',weekday:'short',...(short?{}:{month:'short',day:'numeric'})})}
+function dNum(iso){const d=new Date(iso+'T12:00:00Z');return (d.getUTCMonth()+1)+'/'+d.getUTCDate()}
+function fmtT(hm){let [h,m]=hm.split(':').map(Number);const ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+String(m).padStart(2,'0')+' '+ap}
+function ago(iso){if(!iso)return '';const s=(Date.now()-new Date(iso))/1000;if(s<90)return 'just now';if(s<3600)return Math.round(s/60)+' min ago';if(s<86400)return Math.round(s/3600)+' hr ago';return Math.round(s/86400)+' days ago'}
+function parseDay(str){if(!str)return[];return str.split(';').filter(Boolean).map(x=>{const [t,p,s]=x.split(',');return {t:t.slice(0,2)+':'+t.slice(2),p:p===''?null:Number(p),s:s===''?null:Number(s)}})}
+function inWin(t){const h=Number(t.slice(0,2))+Number(t.slice(3))/60;if(pref.win==='am')return h<11;if(pref.win==='mid')return h>=11&&h<14;if(pref.win==='pm')return h>=14;return true}
+function times(cid,date){const r=state.results[cid];if(!r||!r.days||!(date in r.days))return null;return parseDay(r.days[date]).filter(x=>(x.s==null||x.s>=pref.players)&&inWin(x.t)&&(!pref.maxp||x.p==null||x.p<=pref.maxp))}
+function bookLink(c,date){const u=c.bookUrl||c.website;if(!u)return null;return u.replace('{date}',date).replace('{players}',pref.players)}
+const RET={5:.15,4:.35,3:.6,2:.85,1:1};
+const LV=[['dry','Dry',.08],['damp','Damp',.25],['soft','Soft',.5],['soggy','Soggy',Infinity]];
+function rainOn(c,d){const w=state.weather[c.id];const v=w?.days?.[d];return v?Number(v[0])||0:0}
+function wet(c,date){const w=state.weather[c.id];const sc=c.drainage?.score;if(!w||!w.days||!sc)return null;
+  const r=n=>rainOn(c,shift(date,n));
+  const rain=r(0)+r(-1)+r(-2)*.6+r(-3)*.35;const idx=rain*(RET[sc]??.6);const lv=LV.find(l=>idx<l[2]);
+  return {idx,key:lv[0],label:lv[1],prior:r(-1)+r(-2)+r(-3),day:r(0)}}
+const wetTag=(c,d,suffix='')=>{const x=wet(c,d);return x?`<span class="wet w-${x.key}"><i></i>${x.label}${suffix}</span>`:''};
+const meter=s=>`<div class="meter" aria-label="Drainage ${s||'?'} of 5">${[1,2,3,4,5].map(i=>`<span class="${i<=(s||0)?'on':''}"></span>`).join('')}</div>`;
+const isPub=c=>(c.access||'public')==='public';
+const hasTimes=c=>!!c.platform&&c.platform!=='link';
+function inView(c){return c.active!==false&&c.status==='ready'&&(pref.access==='private'?!isPub(c):isPub(c))&&(!pref.region||c.region===pref.region)}
+function sorted(list){const t=todayPT();const by={rank:c=>c.rank??999,dry:c=>{const w=wet(c,t);return w?w.idx:(6-(c.drainage?.score||3))/10},
+  price:c=>{let m=Infinity;dateList().forEach(d=>(times(c.id,d)||[]).forEach(x=>{if(x.p!=null&&x.p<m)m=x.p}));return m}};
+  const f=by[pref.sort]||by.rank;return list.slice().sort((a,b)=>f(a)-f(b)||(a.rank??999)-(b.rank??999))}
+const rankTag=c=>c.rank?`<span class="rank">#${c.rank}</span>`:'';
+
+function render(){
+  const priv=pref.access==='private';
+  $('#app').classList.toggle('hidden-pub',priv);
+  $('#privsec').hidden=!priv;
+  if(priv&&pref.sort==='price')pref.sort='rank';
+  document.querySelectorAll('#access button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===pref.access)));
+  document.querySelectorAll('#players button').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.v)===pref.players)));
+  document.querySelectorAll('#win button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===pref.win)));
+  $('#maxp').value=String(pref.maxp);$('#region').value=pref.region;$('#sort').value=pref.sort;
+  // status
+  const r=state.run,st=$('#status');let pill='';
+  if(!state.loaded)pill='';
+  else if(r?.status==='error')pill='<span class="pill err"><i class="dot"></i>Last check had problems</span>';
+  else if(r?.finishedAt)pill='<span class="pill ok"><i class="dot"></i>Up to date</span>';
+  st.innerHTML=pill+(r?.finishedAt?`<span>Last checked <b>${esc(ago(r.finishedAt))}</b> · ${new Date(r.finishedAt).toLocaleString('en-US',{weekday:'short',hour:'numeric',minute:'2-digit'})}</span>`:'<span>No checks yet</span>')+
+    (r?.message?`<span>${esc(r.message)}</span>`:'');
+  const dates=dateList(),view=state.courses.filter(inView);
+  const sheetCs=sorted(view.filter(c=>isPub(c)&&hasTimes(c)));
+  // best strip
+  const minBy={};
+  dates.forEach(d=>{let best=null;sheetCs.forEach(c=>{(times(c.id,d)||[]).forEach(x=>{if(x.p!=null&&(!best||x.p<best.p))best={...x,c}})});minBy[d]=best});
+  const mode=priv?'dry':pref.best;
+  document.querySelectorAll('#bestmode button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===mode)));
+  $('#besth').textContent=priv?'Driest private club each day':mode==='dry'?'Driest course each day':'Cheapest each day';
+  const none=d=>`<div class="bday none"><span class="d">${dLabel(d)}</span><span class="p num">—</span><span class="c">Nothing matches</span></div>`;
+  if(mode==='dry'){
+    const pool=priv?view:sheetCs;
+    $('#best').innerHTML=dates.map(d=>{let best=null;pool.forEach(c=>{let n=null,cheap=Infinity;if(!priv){const t=times(c.id,d);if(!t||!t.length)return;n=t.length;cheap=Math.min(...t.map(x=>x.p??Infinity))}
+        const w=wet(c,d);const score=w?w.idx:(6-(c.drainage?.score||3))/10;
+        if(!best||score<best.score-0.001||(Math.abs(score-best.score)<=0.001&&((c.drainage?.score||0)>(best.c.drainage?.score||0)||cheap<best.cheap)))best={c,score,w,cheap,n}});
+      return best?`<button type="button" class="bday" data-c="${esc(best.c.id)}" data-d="${d}"><span class="d">${dLabel(d)}</span><span class="p" style="font-family:var(--display);font-size:19px;font-weight:600;color:var(--ink);line-height:1.1">${esc(best.c.name)}</span><span class="c">${best.w?`<span class="wet w-${best.w.key}"><i></i>${best.w.label}</span> · `:''}${priv?esc(best.c.city):best.n+(best.n===1?' time':' times')+(isFinite(best.cheap)?' from $'+best.cheap:'')}</span></button>`:none(d)}).join('');
+    $('#bestnote').textContent=priv?`${view.length} private clubs${pref.region?' in '+pref.region:''} · drainage score + recent rain`:`Among ${sheetCs.length} courses with open times for ${pref.players}${pref.region?' in '+pref.region:''} · drainage score + recent rain`;
+  }else{
+    $('#best').innerHTML=dates.map(d=>{const b=minBy[d];return b?`<button type="button" class="bday" data-c="${esc(b.c.id)}" data-d="${d}"><span class="d">${dLabel(d)}</span><span class="p num">$${b.p}</span><span class="c">${esc(b.c.name)} · ${fmtT(b.t)} ${wetTag(b.c,d)}</span></button>`:none(d)}).join('');
+    $('#bestnote').textContent=`${pref.players} players · per-player rate`;
+  }
+  // sheet
+  if(!priv){
+  const head=`<thead><tr><th>Course</th>${dates.map(d=>`<th>${dLabel(d,true)}<small>${dNum(d)}</small></th>`).join('')}</tr></thead>`;
+  const body=sheetCs.map(c=>{const res=state.results[c.id];const err=res&&res.ok===false;
+    return `<tr><th class="course" scope="row"><div class="n">${rankTag(c)}<button type="button" data-cd="${esc(c.id)}">${esc(c.name)}</button></div><div class="m">${esc(c.city||'')}${err?' <span class="pill err">Check failed</span>':''}</div></th>`+
+    dates.map(d=>{const t=times(c.id,d);if(t==null)return `<td><div class="cell na">not checked${wetTag(c,d)?'<br>'+wetTag(c,d):''}</div></td>`;
+      const n=t.length,min=n?Math.min(...t.map(x=>x.p??Infinity)):null;const cheap=n&&minBy[d]&&min===minBy[d].p;
+      const sel=state.sel&&state.sel.c===c.id&&state.sel.d===d;
+      return `<td><button type="button" class="cell${n?'':' zero'}${n&&n<=3?' low':''}${cheap?' cheapest':''}" data-c="${esc(c.id)}" data-d="${d}" aria-pressed="${sel}" aria-label="${esc(c.name)} ${dLabel(d)}: ${n} times"><span class="cnt">${n}</span><span class="from">${n&&isFinite(min)?'from $'+min:n?'open':'full'}</span>${wetTag(c,d)}</button></td>`}).join('')+'</tr>'}).join('');
+  $('#sheet').innerHTML=head+'<tbody>'+(body||`<tr><td colspan="${dates.length+1}" style="padding:24px;text-align:center" class="empty">No courses with online tee times in this region.</td></tr>`)+'</tbody>';
+  // link-only
+  const lo=sorted(view.filter(c=>isPub(c)&&!hasTimes(c)));const t0=todayPT();
+  $('#linkonly').innerHTML=`<thead><tr><th>Course</th><th>Drainage</th><th>Today</th><th>Tomorrow</th><th>Phone</th><th></th></tr></thead><tbody>`+(lo.map(c=>`<tr><td><div class="n">${rankTag(c)}<button type="button" data-cd="${esc(c.id)}">${esc(c.name)}</button></div><div class="m">${esc(c.city||'')}${c.note?' · '+esc(c.note):''}</div></td><td>${meter(c.drainage?.score)}</td><td>${wetTag(c,t0)||'<span class="hint">—</span>'}</td><td>${wetTag(c,shift(t0,1))||'<span class="hint">—</span>'}</td><td><span class="phone">${esc(c.phone||'')}</span></td><td>${bookLink(c,t0)?`<a href="${esc(bookLink(c,t0))}" target="_blank" rel="noopener">Booking site ↗</a>`:''}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">None in this region.</td></tr>')+'</tbody>';
+  }
+  // private directory
+  if(priv){const t0=todayPT();const pc=sorted(view);
+    $('#private').innerHTML=`<thead><tr><th>Club</th><th>Drainage</th><th>Today</th><th>Tomorrow</th><th>Rain, last 3 days</th><th>Next 3 days</th><th>Pro shop</th></tr></thead><tbody>`+
+    (pc.map(c=>{const prior=[-1,-2,-3].reduce((a,n)=>a+rainOn(c,shift(t0,n)),0),next=[0,1,2].reduce((a,n)=>a+rainOn(c,shift(t0,n)),0);const hw=!!state.weather[c.id];
+      return `<tr><td><div class="n">${rankTag(c)}<button type="button" data-cd="${esc(c.id)}">${esc(c.name)}</button></div><div class="m">${esc(c.city||'')}${c.note?' · '+esc(c.note):''}</div></td><td>${meter(c.drainage?.score)}<div class="hint">${esc(c.drainage?.confidence||'')}</div></td><td>${wetTag(c,t0)||'<span class="hint">—</span>'}</td><td>${wetTag(c,shift(t0,1))||'<span class="hint">—</span>'}</td><td class="num">${hw?prior.toFixed(2)+'"':'—'}</td><td class="num">${hw?next.toFixed(2)+'"':'—'}</td><td><span class="phone">${esc(c.phone||'')}</span>${c.website?`<div><a href="${esc(c.website)}" target="_blank" rel="noopener" class="hint">Website ↗</a></div>`:''}</td></tr>`}).join('')||'<tr><td colspan="7" class="empty">No clubs in this region.</td></tr>')+'</tbody>';}
+  // time detail
+  const det=$('#detail');
+  if(state.sel&&!priv){const c=state.courses.find(x=>x.id===state.sel.c),d=state.sel.d,t=c&&times(c.id,d);
+    if(!c||t==null){det.hidden=true}else{det.hidden=false;const link=bookLink(c,d);const min=Math.min(...t.map(x=>x.p??Infinity));
+      det.innerHTML=`<div class="detail-h"><div><span class="label">${dLabel(d)} · ${pref.players} players</span><h2>${esc(c.name)}</h2></div>${link?`<a href="${esc(link)}" target="_blank" rel="noopener">Open booking page ↗</a>`:''}</div>`+
+      (t.length?`<div class="times">${t.map(x=>`<div class="t${x.p===min?' deal':''}"><span class="tt">${fmtT(x.t)}</span><span class="tp">${x.p!=null?'$'+x.p:''}${x.s?` · ${x.s} spots`:''}</span></div>`).join('')}</div>`:'<p class="empty">No times match your filters for this day.</p>')+
+      (()=>{const w=wet(c,d);return w?`<p class="note">Ground: <span class="wet w-${w.key}"><i></i>${w.label}</span> · ${w.prior.toFixed(2)}" of rain in the 3 days before${w.day>=0.01?`, ${w.day.toFixed(2)}" expected that day`:', none expected that day'} · drainage ${c.drainage.score}/5</p>`:''})()+
+      `<p class="note">Checked ${esc(ago(state.results[c.id]?.checkedAt))}. Times go fast; confirm on the booking page.${c.note?' '+esc(c.note):''}</p>`}}
+  else det.hidden=true;
+  // course detail (drainage + rain)
+  const cd=$('#cdetail');const c=state.csel&&state.courses.find(x=>x.id===state.csel);
+  if(!c)cd.hidden=true;else{cd.hidden=false;const dr=c.drainage||{};const w=state.weather[c.id];const t0=todayPT();
+    const span=[-3,-2,-1,0,1,2,3,4,5,6].map(n=>shift(t0,n));const vals=span.map(d=>rainOn(c,d));const mx=Math.max(.5,...vals);
+    cd.innerHTML=`<div class="detail-h"><div><span class="label">${isPub(c)?'Public':'Private'} · ${esc(c.city||'')}${c.region?' · '+esc(c.region):''}${c.rank?' · ranked #'+c.rank:''}</span><h2>${esc(c.name)}</h2></div><button type="button" class="linkbtn" data-close>Close</button></div>
+      <div class="cdet"><div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;gap:10px;align-items:center">${meter(dr.score)}<span class="label">Drainage ${dr.score?dr.score+'/5':'unrated'}${dr.confidence?' · '+esc(dr.confidence)+' confidence':''}</span></div>
+        <p style="margin:0">${esc(dr.summary||'No drainage notes yet.')}</p>
+        ${(dr.sources||[]).length?`<div class="src">${dr.sources.map(s=>`<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.label)}</a>`).join('')}</div>`:''}
+        <div class="src">${c.phone?`<span class="phone">${esc(c.phone)}</span>`:''}${c.website?`<a href="${esc(c.website)}" target="_blank" rel="noopener">Website ↗</a>`:''}${isPub(c)&&c.bookUrl?`<a href="${esc(bookLink(c,t0))}" target="_blank" rel="noopener">Booking ↗</a>`:''}</div></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><span class="label">Rain (in) · last 3 days, then forecast ${wetTag(c,t0,' today')}</span>
+        ${w?`<div class="rainrow">${span.map((d,i)=>`<div title="${dLabel(d)}: ${vals[i].toFixed(2)} in"><b class="${d>=t0?'fc':''}" style="height:${Math.max(1,Math.round(vals[i]/mx*30))}px"></b><small>${dLabel(d,true).slice(0,2)}</small></div>`).join('')}</div>
+        <div class="src"><span>${vals.slice(0,3).reduce((a,b)=>a+b,0).toFixed(2)}" last 3 days</span><span>${vals.slice(3).reduce((a,b)=>a+b,0).toFixed(2)}" next 7</span></div>`:'<div class="src">Rain data arrives with the next check</div>'}</div></div>`}
+  // manage list
+  $('#ccount').textContent=`Manage courses (${state.courses.filter(isPub).length} public · ${state.courses.filter(c=>!isPub(c)).length} private)`;
+  $('#courses').innerHTML=state.courses.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(c=>{let s=c.status!=='ready'?'set up next check':c.active===false?'paused':isPub(c)?(hasTimes(c)?'times':'link only'):'private';
+    return `<div class="mrow"><span title="${esc(c.name)}">${esc(c.name)} <span class="hint">· ${esc(s)}</span></span></div>`}).join('');
+}
+
+function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,4000)}
+function showCourse(id){state.csel=id;render();$('#cdetail').scrollIntoView({block:'nearest',behavior:'smooth'})}
+
+document.addEventListener('click',e=>{const b=e.target.closest('[data-cd]');if(b){showCourse(b.dataset.cd);return}if(e.target.closest('[data-close]')){state.csel=null;render()}});
+$('#sheet').addEventListener('click',e=>{const b=e.target.closest('button.cell');if(!b)return;const s={c:b.dataset.c,d:b.dataset.d};state.sel=(state.sel&&state.sel.c===s.c&&state.sel.d===s.d)?null:s;render();if(state.sel)$('#detail').scrollIntoView({block:'nearest',behavior:'smooth'})});
+$('#best').addEventListener('click',e=>{const b=e.target.closest('button.bday');if(!b)return;if(pref.access==='private'){showCourse(b.dataset.c);return}state.sel={c:b.dataset.c,d:b.dataset.d};render();$('#detail').scrollIntoView({block:'nearest',behavior:'smooth'})});
+$('#access').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;pref.access=b.dataset.v;state.sel=null;state.csel=null;savePref();render()});
+$('#region').addEventListener('change',e=>{pref.region=e.target.value;savePref();render()});
+$('#sort').addEventListener('change',e=>{pref.sort=e.target.value;savePref();render()});
+$('#bestmode').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;pref.best=b.dataset.v;savePref();render()});
+$('#win').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;pref.win=b.dataset.v;savePref();render()});
+$('#maxp').addEventListener('change',e=>{pref.maxp=Number(e.target.value);savePref();render()});
+$('#players').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;pref.players=Number(b.dataset.v);savePref();render()});
+
+// GitHub links derived from the Pages URL (user.github.io/repo)
+(function(){const h=location.hostname,m=h.match(/^([^.]+)\.github\.io$/i);if(!m)return;const repo=location.pathname.split('/').filter(Boolean)[0]||(m[1]+'.github.io');const base=`https://github.com/${m[1]}/${repo}`;
+  $('#refresh').href=base+'/actions/workflows/update.yml';const el=$('#editlink');if(el)el.href=base+'/edit/main/data/courses.json'})();
+
+async function load(){const bust='?t='+Math.floor(Date.now()/60000);const get=f=>fetch('data/'+f+bust).then(r=>{if(!r.ok)throw new Error(f+' '+r.status);return r.json()});
+  try{const [c,r,w,m]=await Promise.all([get('courses.json'),get('results.json'),get('weather.json'),get('meta.json')]);
+    state.courses=c.map(x=>({status:'ready',...x}));state.results=r;state.weather=w;state.run=m;state.loaded=true;render()}
+  catch(e){$('#status').innerHTML='<span>Could not load the latest data. Refresh the page in a minute.</span>'}}
+render();
+load();
+setInterval(render,60000);
+setInterval(load,15*60000);
+</script>
+
+</body></html>
