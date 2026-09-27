@@ -23,6 +23,9 @@ export function datesFrom(now = new Date()) {
 // Booking sites rate-limit bursts (HTTP 429), so requests are paced and 429s back off.
 const PACE_MS = 1200;
 const PLATFORM_PACE_MS = { teeitup: 4000 }; // TeeItUp/GolfNow rate-limits hardest
+// TeeItUp/GolfNow allows roughly 60 requests per window, so each run checks at most this many
+// of its courses (7 requests each), stalest first. The workflow runs twice each morning.
+const PLATFORM_MAX_COURSES = { teeitup: 7 };
 // Hard stop so a rate-limited site can't keep the job running for an hour.
 const DEADLINE = Date.now() + 15 * 60 * 1000;
 async function getJSON(url, headers = {}, tries = 4) {
@@ -147,6 +150,13 @@ async function main() {
   // One course at a time per booking platform; different platforms run side by side.
   const byPlatform = {};
   for (const c of bookable) (byPlatform[c.platform] ??= []).push(c);
+  for (const [p, list] of Object.entries(byPlatform)) {
+    const max = PLATFORM_MAX_COURSES[p];
+    if (!max || list.length <= max) continue;
+    const age = c => (prevResults[c.id]?.ok && prevResults[c.id]?.checkedAt) ? Date.parse(prevResults[c.id].checkedAt) : 0;
+    list.sort((a, b) => age(a) - age(b));
+    for (const c of list.splice(max)) { if (prevResults[c.id]) results[c.id] = prevResults[c.id]; console.log(`later ${c.id}: checked on the next run`); }
+  }
   const blocked = {}; // stop hammering a platform after two courses in a row are rate-limited
   await Promise.all(Object.values(byPlatform).map(list => pool(list, 1, async c => {
     try {
