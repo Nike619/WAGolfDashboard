@@ -22,13 +22,14 @@ export function datesFrom(now = new Date()) {
 
 // Booking sites rate-limit bursts (HTTP 429), so requests are paced and 429s back off.
 const PACE_MS = 1200;
+const PLATFORM_PACE_MS = { teeitup: 4000 }; // TeeItUp/GolfNow rate-limits hardest
 async function getJSON(url, headers = {}, tries = 5) {
   let last;
   for (let i = 0; i < tries; i++) {
     try {
       const r = await fetch(url, { headers: { 'User-Agent': UA, Accept: 'application/json, text/plain, */*', ...headers }, signal: AbortSignal.timeout(20000) });
       const text = await r.text();
-      if (r.status === 429) { last = new Error('Rate limited by the booking site (HTTP 429)'); await sleep(15000 * (i + 1)); continue; }
+      if (r.status === 429) { last = new Error('Rate limited by the booking site (HTTP 429)'); await sleep(30000 * (i + 1)); continue; }
       if (!r.ok) throw new Error(`HTTP ${r.status}: ${text.slice(0, 120)}`);
       return JSON.parse(text);
     } catch (e) { last = e; await sleep(1500 * (i + 1)); }
@@ -115,7 +116,7 @@ async function pool(items, n, fn) {
 
 async function fetchCourse(c, dates) {
   const days = {};
-  for (const d of dates) { days[d] = encode(await PLATFORMS[c.platform](c, d)); await sleep(PACE_MS); }
+  for (const d of dates) { days[d] = encode(await PLATFORMS[c.platform](c, d)); await sleep(PLATFORM_PACE_MS[c.platform] || PACE_MS); }
   return days;
 }
 
