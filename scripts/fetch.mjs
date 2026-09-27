@@ -20,15 +20,18 @@ export function datesFrom(now = new Date()) {
   return [...Array(DAYS)].map((_, i) => { const d = new Date(today + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + i); return d.toISOString().slice(0, 10); });
 }
 
-async function getJSON(url, headers = {}, tries = 2) {
+// Booking sites rate-limit bursts (HTTP 429), so requests are paced and 429s back off.
+const PACE_MS = 1200;
+async function getJSON(url, headers = {}, tries = 5) {
   let last;
   for (let i = 0; i < tries; i++) {
     try {
       const r = await fetch(url, { headers: { 'User-Agent': UA, Accept: 'application/json, text/plain, */*', ...headers }, signal: AbortSignal.timeout(20000) });
       const text = await r.text();
+      if (r.status === 429) { last = new Error('Rate limited by the booking site (HTTP 429)'); await sleep(15000 * (i + 1)); continue; }
       if (!r.ok) throw new Error(`HTTP ${r.status}: ${text.slice(0, 120)}`);
       return JSON.parse(text);
-    } catch (e) { last = e; await sleep(800 * (i + 1)); }
+    } catch (e) { last = e; await sleep(1500 * (i + 1)); }
   }
   throw last;
 }
@@ -74,6 +77,7 @@ async function chronogolf(c, date) {
     const q = `https://www.chronogolf.com/marketplace/clubs/${club}/teetimes?date=${date}&course_id=${course}&nb_holes=18&` + Array(n).fill('affiliation_type_ids%5B%5D=' + aff).join('&');
     const r = await getJSON(q, { Referer: `https://www.chronogolf.com/club/${club}/widget` });
     by[n] = Array.isArray(r) ? r : [];
+    await sleep(PACE_MS);
   }
   return parseChrono(by);
 }
@@ -111,7 +115,7 @@ async function pool(items, n, fn) {
 
 async function fetchCourse(c, dates) {
   const days = {};
-  for (const d of dates) { days[d] = encode(await PLATFORMS[c.platform](c, d)); await sleep(250); }
+  for (const d of dates) { days[d] = encode(await PLATFORMS[c.platform](c, d)); await sleep(PACE_MS); }
   return days;
 }
 
@@ -136,7 +140,10 @@ async function main() {
   const bookable = courses.filter(c => c.access !== 'private' && PLATFORMS[c.platform] && c.params);
   const results = {}, failures = [];
 
-  await pool(bookable, 4, async c => {
+  // One course at a time per booking platform; different platforms run side by side.
+  const byPlatform = {};
+  for (const c of bookable) (byPlatform[c.platform] ??= []).push(c);
+  await Promise.all(Object.values(byPlatform).map(list => pool(list, 1, async c => {
     try {
       const days = await fetchCourse(c, dates);
       results[c.id] = { ok: true, checkedAt: new Date().toISOString(), days };
@@ -147,7 +154,7 @@ async function main() {
       results[c.id] = { ...prev, ok: false, error: String(e.message || e).slice(0, 160) };
       console.log(`FAIL ${c.id}: ${e.message || e}`);
     }
-  });
+  })));
 
   let weather = prevWeather, weatherError = '';
   try { weather = await fetchWeather(courses); console.log(`ok   weather for ${Object.keys(weather).length} courses`); }
