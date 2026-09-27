@@ -3,6 +3,7 @@ name: Update tee times
 on:
   schedule:
     - cron: '50 13 * * *'   # 6:50 AM Pacific in summer (5:50 AM in winter)
+    - cron: '5 15 * * *'    # 8:05 AM Pacific: second pass for rate-limited booking sites
   workflow_dispatch:        # "Run workflow" button = check now
   push:
     branches: [main]
