@@ -23,13 +23,16 @@ export function datesFrom(now = new Date()) {
 // Booking sites rate-limit bursts (HTTP 429), so requests are paced and 429s back off.
 const PACE_MS = 1200;
 const PLATFORM_PACE_MS = { teeitup: 4000 }; // TeeItUp/GolfNow rate-limits hardest
-async function getJSON(url, headers = {}, tries = 5) {
+// Hard stop so a rate-limited site can't keep the job running for an hour.
+const DEADLINE = Date.now() + 15 * 60 * 1000;
+async function getJSON(url, headers = {}, tries = 4) {
   let last;
   for (let i = 0; i < tries; i++) {
+    if (Date.now() > DEADLINE) throw new Error('Skipped: the check ran out of time');
     try {
       const r = await fetch(url, { headers: { 'User-Agent': UA, Accept: 'application/json, text/plain, */*', ...headers }, signal: AbortSignal.timeout(20000) });
       const text = await r.text();
-      if (r.status === 429) { last = new Error('Rate limited by the booking site (HTTP 429)'); await sleep(30000 * (i + 1)); continue; }
+      if (r.status === 429) { last = new Error('Rate limited by the booking site (HTTP 429)'); await sleep(20000 * (i + 1)); continue; }
       if (!r.ok) throw new Error(`HTTP ${r.status}: ${text.slice(0, 120)}`);
       return JSON.parse(text);
     } catch (e) { last = e; await sleep(1500 * (i + 1)); }
@@ -144,13 +147,17 @@ async function main() {
   // One course at a time per booking platform; different platforms run side by side.
   const byPlatform = {};
   for (const c of bookable) (byPlatform[c.platform] ??= []).push(c);
+  const blocked = {}; // stop hammering a platform after two courses in a row are rate-limited
   await Promise.all(Object.values(byPlatform).map(list => pool(list, 1, async c => {
     try {
+      if ((blocked[c.platform] || 0) >= 2) throw new Error('Skipped: booking site is rate-limiting this run');
       const days = await fetchCourse(c, dates);
       results[c.id] = { ok: true, checkedAt: new Date().toISOString(), days };
+      blocked[c.platform] = 0;
       console.log(`ok   ${c.id}: ${Object.values(days).reduce((n, v) => n + (v ? v.split(';').length : 0), 0)} times`);
     } catch (e) {
       failures.push(c.name);
+      if (/429|rate-limit/i.test(String(e.message))) blocked[c.platform] = (blocked[c.platform] || 0) + 1;
       const prev = prevResults[c.id] || {};
       results[c.id] = { ...prev, ok: false, error: String(e.message || e).slice(0, 160) };
       console.log(`FAIL ${c.id}: ${e.message || e}`);
