@@ -46,6 +46,8 @@ header{display:flex;flex-wrap:wrap;gap:16px 24px;align-items:flex-end;justify-co
 .pill.run{background:var(--sand-soft);color:var(--sand)}
 .pill.err{background:var(--warn-soft);color:var(--warn)}
 .pill.ok{background:var(--accent-soft);color:var(--accent)}
+.pill.stale{background:var(--sand-soft);color:var(--sand)}
+.cell.old .cnt,.cell.old .from{opacity:.55}
 .dot{width:7px;height:7px;border-radius:50%;background:currentColor}
 
 .filters{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:flex-end}
@@ -247,6 +249,9 @@ function dLabel(iso,short){const d=new Date(iso+'T12:00:00Z');return d.toLocaleD
 function dNum(iso){const d=new Date(iso+'T12:00:00Z');return (d.getUTCMonth()+1)+'/'+d.getUTCDate()}
 function fmtT(hm){let [h,m]=hm.split(':').map(Number);const ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+String(m).padStart(2,'0')+' '+ap}
 function ago(iso){if(!iso)return '';const s=(Date.now()-new Date(iso))/1000;if(s<90)return 'just now';if(s<3600)return Math.round(s/60)+' min ago';if(s<86400)return Math.round(s/3600)+' hr ago';return Math.round(s/86400)+' days ago'}
+const dataAt=r=>r?(r.dataAt||r.checkedAt||null):null;
+const isStale=r=>{const t=dataAt(r);return !t||Date.now()-new Date(t)>12*3600e3};
+function badge(res){if(!res)return '';if(res.ok===false)return ` <span class="pill err" title="${esc(res.error||'')}">Check failed${dataAt(res)?' · times from '+esc(ago(dataAt(res))):''}</span>`;if(isStale(res))return ` <span class="pill stale">Times from ${esc(ago(dataAt(res)))}</span>`;if(res.warning)return ` <span class="pill stale" title="${esc(res.warning)}">No times all week</span>`;return ''}
 function parseDay(str){if(!str)return[];return str.split(';').filter(Boolean).map(x=>{const [t,p,s]=x.split(',');return {t:t.slice(0,2)+':'+t.slice(2),p:p===''?null:Number(p),s:s===''?null:Number(s)}})}
 function inWin(t){const h=Number(t.slice(0,2))+Number(t.slice(3))/60;if(pref.win==='am')return h<11;if(pref.win==='mid')return h>=11&&h<14;if(pref.win==='pm')return h>=14;return true}
 function times(cid,date){const r=state.results[cid];if(!r||!r.days||!(date in r.days))return null;return parseDay(r.days[date]).filter(x=>(x.s==null||x.s>=pref.players)&&inWin(x.t)&&(!pref.maxp||x.p==null||x.p<=pref.maxp))}
@@ -280,10 +285,11 @@ function render(){
   // status
   const r=state.run,st=$('#status');let pill='';
   if(!state.loaded)pill='';
+  else if(r?.status==='partial')pill='<span class="pill stale"><i class="dot"></i>Partly updated</span>';
   else if(r?.status==='error')pill='<span class="pill err"><i class="dot"></i>Last check had problems</span>';
   else if(r?.finishedAt)pill='<span class="pill ok"><i class="dot"></i>Up to date</span>';
   st.innerHTML=pill+(r?.finishedAt?`<span>Last checked <b>${esc(ago(r.finishedAt))}</b> · ${new Date(r.finishedAt).toLocaleString('en-US',{weekday:'short',hour:'numeric',minute:'2-digit'})}</span>`:'<span>No checks yet</span>')+
-    (r?.message?`<span>${esc(r.message)}</span>`:'');
+    (r?.message?`<span>${esc(r.message)}</span>`:'')+(()=>{const wa=r?.weatherAt||Object.values(state.weather||{})[0]?.updatedAt;return wa&&Date.now()-new Date(wa)>18*3600e3?`<span>Rain data from ${esc(ago(wa))}</span>`:''})();
   const dates=dateList(),view=state.courses.filter(inView);
   const sheetCs=sorted(view.filter(c=>isPub(c)&&hasTimes(c)));
   // best strip
@@ -307,12 +313,12 @@ function render(){
   // sheet
   if(!priv){
   const head=`<thead><tr><th>Course</th>${dates.map(d=>`<th>${dLabel(d,true)}<small>${dNum(d)}</small></th>`).join('')}</tr></thead>`;
-  const body=sheetCs.map(c=>{const res=state.results[c.id];const err=res&&res.ok===false;
-    return `<tr><th class="course" scope="row"><div class="n">${rankTag(c)}<button type="button" data-cd="${esc(c.id)}">${esc(c.name)}</button></div><div class="m">${esc(c.city||'')}${err?' <span class="pill err">Check failed</span>':''}</div></th>`+
+  const body=sheetCs.map(c=>{const res=state.results[c.id];const old=!!res&&isStale(res);
+    return `<tr><th class="course" scope="row"><div class="n">${rankTag(c)}<button type="button" data-cd="${esc(c.id)}">${esc(c.name)}</button></div><div class="m">${esc(c.city||'')}${badge(res)}</div></th>`+
     dates.map(d=>{const t=times(c.id,d);if(t==null)return `<td><div class="cell na">not checked${wetTag(c,d)?'<br>'+wetTag(c,d):''}</div></td>`;
       const n=t.length,min=n?Math.min(...t.map(x=>x.p??Infinity)):null;const cheap=n&&minBy[d]&&min===minBy[d].p;
       const sel=state.sel&&state.sel.c===c.id&&state.sel.d===d;
-      return `<td><button type="button" class="cell${n?'':' zero'}${n&&n<=3?' low':''}${cheap?' cheapest':''}" data-c="${esc(c.id)}" data-d="${d}" aria-pressed="${sel}" aria-label="${esc(c.name)} ${dLabel(d)}: ${n} times"><span class="cnt">${n}</span><span class="from">${n&&isFinite(min)?'from $'+min:n?'open':'full'}</span>${wetTag(c,d)}</button></td>`}).join('')+'</tr>'}).join('');
+      return `<td><button type="button" class="cell${n?'':' zero'}${n&&n<=3?' low':''}${cheap?' cheapest':''}${old?' old':''}" data-c="${esc(c.id)}" data-d="${d}" aria-pressed="${sel}" aria-label="${esc(c.name)} ${dLabel(d)}: ${n} times"><span class="cnt">${n}</span><span class="from">${n&&isFinite(min)?'from $'+min:n?'open':'full'}</span>${wetTag(c,d)}</button></td>`}).join('')+'</tr>'}).join('');
   $('#sheet').innerHTML=head+'<tbody>'+(body||`<tr><td colspan="${dates.length+1}" style="padding:24px;text-align:center" class="empty">No courses with online tee times in this region.</td></tr>`)+'</tbody>';
   // link-only
   const lo=sorted(view.filter(c=>isPub(c)&&!hasTimes(c)));const t0=todayPT();
@@ -330,7 +336,7 @@ function render(){
       det.innerHTML=`<div class="detail-h"><div><span class="label">${dLabel(d)} · ${pref.players} players</span><h2>${esc(c.name)}</h2></div>${link?`<a href="${esc(link)}" target="_blank" rel="noopener">Open booking page ↗</a>`:''}</div>`+
       (t.length?`<div class="times">${t.map(x=>`<div class="t${x.p===min?' deal':''}"><span class="tt">${fmtT(x.t)}</span><span class="tp">${x.p!=null?'$'+x.p:''}${x.s?` · ${x.s} spots`:''}</span></div>`).join('')}</div>`:'<p class="empty">No times match your filters for this day.</p>')+
       (()=>{const w=wet(c,d);return w?`<p class="note">Ground: <span class="wet w-${w.key}"><i></i>${w.label}</span> · ${w.prior.toFixed(2)}" of rain in the 3 days before${w.day>=0.01?`, ${w.day.toFixed(2)}" expected that day`:', none expected that day'} · drainage ${c.drainage.score}/5</p>`:''})()+
-      `<p class="note">Checked ${esc(ago(state.results[c.id]?.checkedAt))}. Times go fast; confirm on the booking page.${c.note?' '+esc(c.note):''}</p>`}}
+      `<p class="note">Times checked ${esc(ago(dataAt(state.results[c.id])))}. Times go fast; confirm on the booking page.${c.note?' '+esc(c.note):''}</p>`}}
   else det.hidden=true;
   // course detail (drainage + rain)
   const cd=$('#cdetail');const c=state.csel&&state.courses.find(x=>x.id===state.csel);
