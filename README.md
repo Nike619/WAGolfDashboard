@@ -1,6 +1,6 @@
 # Open Tee Sheet
 
-A GitHub Pages dashboard of open tee times and ground conditions for Washington golf courses: 34 public courses, 21 with live tee times, plus 54 private clubs. A GitHub Actions job refreshes the data every morning. You don't need a server, a computer left running, or any API keys.
+A GitHub Pages dashboard of open tee times and ground conditions for Washington golf courses: 34 public courses, 24 with live tee times, plus 54 private clubs. A GitHub Actions job refreshes the data every morning. You don't need a server, a computer left running, or any API keys.
 
 ## Set up (about 5 minutes)
 
@@ -41,6 +41,8 @@ Edit `data/courses.json` on GitHub. Each save kicks off a fresh check. A course 
   - **`teeitup`** (the TeeItUp/GolfNow booking engine): params are `alias` and `facility`.
   - **`chronogolf`:** params are `club`, `course` and `aff` (the public rate ID).
   - **`foreup`:** params are `courseId`, `scheduleId` and `bookingClass`.
+  - **`teesnap`:** params are `host` (the part before `.teesnap.net`) and `course` (the course number in the booking site's `teetimes-day?course=` request).
+  - **`clubprophet`** (sites on `cps.golf`): params are `host` (the part before `.cps.golf`) and `courseIds`. Only works for courses that let guests search without signing in.
   - **`null`:** the course has no tee sheet the dashboard can read. It appears under **Book directly** with a link.
 - **`drainage.score`:** 1 (soggy for days) to 5 (firm soon after heavy rain). Together with the last three days of rain, it decides the Dry / Damp / Soft / Soggy label.
 
@@ -49,7 +51,8 @@ Finding a course's booking IDs and researching how it drains takes some digging.
 ## How it works
 
 - `scripts/fetch.mjs` (Node 20, no dependencies) reads public tee-time availability for the next 7 days from each course's booking site and daily rain from Open-Meteo. It writes the results to `data/results.json`, `data/weather.json` and `data/meta.json`. It only reads availability and never books anything.
-- If a booking site stops responding, that course is marked **Check failed** and keeps its last good times. The other courses still update.
+- If a booking site stops responding, that course is marked **Check failed** and keeps its last good times. The other courses still update, and the run shows as **Partly updated**.
+- Times more than 12 hours old get a **Times from … ago** badge, and a course that shows no open times all week gets a **No times all week** badge, since that often means its booking site changed.
 - `.github/workflows/update.yml` runs the script, commits the new data, and publishes the site.
 - `index.html` is the whole page. It loads the JSON files from `data/`, and filters for players, time of day, price and region right in the browser.
 
