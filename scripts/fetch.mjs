@@ -112,7 +112,58 @@ async function foreup(c, date) {
   return parseForeup(json);
 }
 
-const PLATFORMS = { teeitup, chronogolf, foreup };
+// ---------- TeeSnap ----------
+// Each tee time lists the bookings in its front-nine section; open spots = 4 minus booked golfers.
+export function parseTeeSnap(json) {
+  const tt = json?.teeTimes || {};
+  const size = new Map((tt.bookings || []).map(b => [b.bookingId, (b.golfers || []).length]));
+  return (tt.teeTimes || []).map(t => {
+    const price = (t.prices || []).find(p => p.roundType === 'EIGHTEEN_HOLE')?.price;
+    const sec = (t.teeOffSections || []).find(s => s.teeOff === 'FRONT_NINE');
+    if (price == null || !sec || sec.isHeld) return null;
+    const open = 4 - (sec.bookings || []).reduce((n, b) => n + (size.get(b) ?? 1), 0);
+    return open >= 1 ? [t.teeTime.slice(11, 16), Math.round(Number(price)), open] : null;
+  }).filter(Boolean);
+}
+async function teesnap(c, date) {
+  const h = c.params.host;
+  const json = await getJSON(`https://${h}.api.teesnap.net/api/bookingsite/teetimes-day?course=${c.params.course}&date=${date}&players=1&holes=18&addons=off`,
+    { Origin: `https://${h}.teesnap.net`, Referer: `https://${h}.teesnap.net/` });
+  return parseTeeSnap(json);
+}
+
+// ---------- Club Prophet (cps.golf) ----------
+// Guest access: a short-lived anonymous token, then a registered search transaction.
+const cpsSessions = new Map();
+async function cpsSession(host) {
+  if (cpsSessions.has(host)) return cpsSessions.get(host);
+  const base = `https://${host}.cps.golf`;
+  const tr = await fetch(`${base}/identityapi/myconnect/token/short`, { method: 'POST', headers: { 'User-Agent': UA, 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'client_id=onlinereswebshortlived', signal: AbortSignal.timeout(20000) });
+  if (!tr.ok) throw new Error(tr.status === 403 ? 'Club Prophet blocked the automated check (bot protection)' : `HTTP ${tr.status} getting a guest token`);
+  const token = (await tr.json()).access_token;
+  const headers = { Authorization: 'Bearer ' + token, 'client-id': 'onlineresweb', 'x-componentid': '1', Referer: `${base}/onlineresweb/` };
+  const tid = crypto.randomUUID();
+  const rr = await fetch(`${base}/onlineres/onlineapi/api/v1/onlinereservation/RegisterTransactionId`, { method: 'POST', headers: { 'User-Agent': UA, ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify({ transactionId: tid }), signal: AbortSignal.timeout(20000) });
+  if (!rr.ok) throw new Error(rr.status === 403 ? 'Club Prophet blocked the automated check (bot protection)' : `HTTP ${rr.status} starting a search`);
+  const s = { base, headers, tid };
+  cpsSessions.set(host, s);
+  return s;
+}
+export function parseClubProphet(json) {
+  return (json?.content || []).filter(t => t.availableSlot >= 1 && t.isContain18HoleItems !== false).map(t => {
+    const f = (t.shItemPrices || []).filter(x => /18/.test(x.shItemCode || '')).map(x => x.displayPrice ?? x.price).filter(x => x != null);
+    return [t.startTime.slice(11, 16), f.length ? Math.round(Math.min(...f)) : '', t.availableSlot];
+  });
+}
+async function clubprophet(c, date) {
+  const s = await cpsSession(c.params.host);
+  const sd = new Date(date + 'T12:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'short', month: 'short', day: '2-digit', year: 'numeric' }).replace(/,/g, '');
+  const q = `${s.base}/onlineres/onlineapi/api/v1/onlinereservation/TeeTimes?searchDate=${encodeURIComponent(sd)}&holes=18&numberOfPlayer=1&courseIds=${c.params.courseIds}&searchTimeType=0&transactionId=${s.tid}&teeOffTimeMin=0&teeOffTimeMax=23&isChangeTeeOffTime=true&teeSheetSearchView=6&classCode=R&defaultOnlineRate=N&isUseCapacityPricing=false&memberStoreId=1&searchType=1`;
+  try { return parseClubProphet(await getJSON(q, s.headers, 2)); }
+  catch (e) { if (/HTTP 403/.test(String(e.message))) throw new Error('Club Prophet blocked the automated check (bot protection)'); throw e; }
+}
+
+const PLATFORMS = { teeitup, chronogolf, foreup, teesnap, clubprophet };
 
 async function pool(items, n, fn) {
   const out = []; let i = 0;
@@ -145,7 +196,7 @@ async function main() {
   const prevWeather = await readJSON('weather.json', {});
   const dates = datesFrom();
   const bookable = courses.filter(c => c.access !== 'private' && PLATFORMS[c.platform] && c.params);
-  const results = {}, failures = [];
+  const results = {}, failures = [], deferred = [];
 
   // One course at a time per booking platform; different platforms run side by side.
   const byPlatform = {};
@@ -155,21 +206,24 @@ async function main() {
     if (!max || list.length <= max) continue;
     const age = c => (prevResults[c.id]?.ok && prevResults[c.id]?.checkedAt) ? Date.parse(prevResults[c.id].checkedAt) : 0;
     list.sort((a, b) => age(a) - age(b));
-    for (const c of list.splice(max)) { if (prevResults[c.id]) results[c.id] = prevResults[c.id]; console.log(`later ${c.id}: checked on the next run`); }
+    for (const c of list.splice(max)) { if (prevResults[c.id]) results[c.id] = prevResults[c.id]; deferred.push(c.id); console.log(`later ${c.id}: checked on the next run`); }
   }
   const blocked = {}; // stop hammering a platform after two courses in a row are rate-limited
   await Promise.all(Object.values(byPlatform).map(list => pool(list, 1, async c => {
     try {
       if ((blocked[c.platform] || 0) >= 2) throw new Error('Skipped: booking site is rate-limiting this run');
       const days = await fetchCourse(c, dates);
-      results[c.id] = { ok: true, checkedAt: new Date().toISOString(), days };
+      const now = new Date().toISOString();
+      results[c.id] = { ok: true, checkedAt: now, dataAt: now, days };
+      if (!Object.values(days).some(Boolean)) results[c.id].warning = 'No open times found all week. The course may be closed, or its booking site changed.';
       blocked[c.platform] = 0;
       console.log(`ok   ${c.id}: ${Object.values(days).reduce((n, v) => n + (v ? v.split(';').length : 0), 0)} times`);
     } catch (e) {
       failures.push(c.name);
       if (/429|rate-limit/i.test(String(e.message))) blocked[c.platform] = (blocked[c.platform] || 0) + 1;
       const prev = prevResults[c.id] || {};
-      results[c.id] = { ...prev, ok: false, error: String(e.message || e).slice(0, 160) };
+      const { warning, ...keep } = prev;
+      results[c.id] = { ...keep, ok: false, error: String(e.message || e).slice(0, 160), checkedAt: new Date().toISOString(), dataAt: prev.dataAt || prev.checkedAt || null };
       console.log(`FAIL ${c.id}: ${e.message || e}`);
     }
   })));
@@ -178,10 +232,10 @@ async function main() {
   try { weather = await fetchWeather(courses); console.log(`ok   weather for ${Object.keys(weather).length} courses`); }
   catch (e) { weatherError = 'Rain data could not be refreshed'; console.log('FAIL weather:', e.message || e); }
 
-  const okCount = bookable.length - failures.length;
+  const checked = bookable.length - deferred.length, okCount = checked - failures.length;
   const meta = {
-    status: bookable.length && !okCount ? 'error' : 'done', startedAt: started, finishedAt: new Date().toISOString(),
-    courses: courses.length, checked: bookable.length, failed: failures.length,
+    status: checked && !okCount ? 'error' : (failures.length || weatherError) ? 'partial' : 'done', startedAt: started, finishedAt: new Date().toISOString(),
+    courses: courses.length, bookable: bookable.length, checked, deferred: deferred.length, failed: failures.length, weatherAt: Object.values(weather)[0]?.updatedAt || null,
     message: [failures.length ? `Couldn't read ${failures.length}: ${failures.slice(0, 6).join(', ')}${failures.length > 6 ? '…' : ''}` : '', weatherError].filter(Boolean).join(' · '),
   };
   await writeJSON('results.json', results);
