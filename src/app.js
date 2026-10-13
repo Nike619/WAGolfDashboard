@@ -72,3 +72,8 @@ render();
 load();
 setInterval(render, 60000);
 setInterval(load, 15 * 60000);
+addEventListener('online', load);
+addEventListener('offline', render);
+
+// Installable app + offline copy (see sw.js). Service workers need https or localhost.
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(() => {});

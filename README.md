@@ -14,6 +14,8 @@ A GitHub Pages dashboard of open tee times and ground conditions for Washington 
 4. **Turn on Pages.** Go to **Settings → Pages → Build and deployment** and set **Source** to **GitHub Actions**.
 5. **Run it once.** Go to **Actions → Update tee times → Run workflow**. After about 3–5 minutes the site is live at `https://<your-username>.github.io/tee-sheet/`.
 
+**Install it like an app.** On iPhone, open the site in Safari, tap **Share → Add to Home Screen**. On Android or desktop Chrome, use **Install app** in the menu. It opens full screen, and if you're offline it shows the last tee times and rain it loaded.
+
 After that, it updates itself every morning at about 6:50 AM Pacific (5:50 AM in winter). The **Run a check** button on the page opens the Actions page, where **Run workflow** starts a check right away.
 
 ## Adding, pausing or removing a course

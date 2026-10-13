@@ -41,7 +41,10 @@ src/app.js          load data/*.json, render() calls every view, shared actions 
 - New page sections go in `src/views/` with their CSS in `styles/`; add the `<link>` to `index.html` in cascade order.
 - Keep logic that can be pure in `src/model/` and cover it in `tests/model.test.mjs`.
 - `package.json` exists only to mark `.js` files as ES modules for Node. There are no dependencies; don't add any.
-- Direction: after the module split comes an iOS-style redesign, then a PWA (manifest + service worker) and a Map tab with weather radar.
+- It's an installable PWA: `manifest.webmanifest`, `icons/` and `sw.js` sit at the repo root so their scope covers the site. `sw.js` is network-first with no precache list: online it always fetches fresh and saves each response; offline it serves the saved copy (data files are saved without their `?t=` cache-buster). Bump `CACHE` in `sw.js` only if saved copies ever need wiping.
+- `icons/icon.svg` is the source icon. To regenerate the PNGs after editing it: `qlmanage -t -s 1024 -o <tmp> icons/icon.svg`, then `sips -s format png -z N N <tmp>/icon.svg.png --out icons/icon-N.png` for 512 and 192, and 180 → `icons/apple-touch-icon.png`.
+- Tee times starting after sunset are hidden (`src/model/sun.js`, from each course's `lat`/`lon`).
+- Next: a Map tab with weather radar and courses colored by ground condition.
 
 - `data/courses.json` is the only hand-edited data file: one JSON object per line, 88 courses (24 with readable tee sheets). Every run reads it.
 - The workflow runs at 13:50 and 15:05 UTC (6:50 and 8:05 AM Pacific in summer), on `workflow_dispatch`, and on pushes to `main` that touch `data/courses.json`, `index.html`, `src/**`, `styles/**`, `scripts/**` or the workflow. It commits the data files, then deploys the repo root to Pages. A push that changes only the page (`index.html`, `src/`, `styles/`) redeploys without checking courses, so page edits don't spend the booking sites' rate limits.
@@ -54,7 +57,7 @@ src/app.js          load data/*.json, render() calls every view, shared actions 
 
 - `node tests/fetch.test.mjs`: offline test with mocked responses for all five booking platforms, using its own sample courses (not `data/courses.json`). Run it after any change to `scripts/fetch.mjs`. When you add a platform, add a mock and an assertion for it.
 - `node tests/model.test.mjs`: tests the page's pure logic in `src/model/` (tee-time filtering, ground conditions). Run it after changing anything there.
-- After changing `src/`, run `for f in $(find src -name '*.js'); do node --check "$f"; done` to catch syntax errors, then preview the page and check both themes, phone width and 900px+.
+- After changing `src/`, run `for f in $(find src -name '*.js'); do node --check "$f"; done` to catch syntax errors, then preview the page and check both themes, phone width and 900px+. `node --check` misses runtime errors, so after a **full reload** click through: each tab, a tee-sheet cell (sheet opens), Course details from it, a course name in a list, and the filter chips at phone width. Read the console for errors after the reload.
 - `node scripts/fetch.mjs`: real run against the live sites. It overwrites `data/results.json`, `data/weather.json` and `data/meta.json`, so don't commit those from a local run unless you mean to. It takes 10+ minutes because of rate-limit pacing.
 - Preview the page with `python3 -m http.server` in the repo root, then open http://localhost:8000. It fetches `data/*.json` with relative URLs, so opening the file directly with `file://` won't load data.
 

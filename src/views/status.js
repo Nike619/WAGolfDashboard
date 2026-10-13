@@ -7,6 +7,7 @@ export function renderStatus() {
   const r = state.run;
   let pill = '';
   if (!state.loaded) pill = '';
+  else if (!navigator.onLine) pill = '<span class="pill stale"><i class="dot"></i>Offline · saved data</span>';
   else if (r?.finishedAt && Date.now() - new Date(r.finishedAt) > 26 * 3600e3) pill = '<span class="pill err"><i class="dot"></i>Not updated today</span>';
   else if (r?.status === 'partial') pill = '<span class="pill stale"><i class="dot"></i>Partly updated</span>';
   else if (r?.status === 'error') pill = '<span class="pill err"><i class="dot"></i>Last check had problems</span>';
