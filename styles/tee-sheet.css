@@ -57,3 +57,6 @@ table.sheet{border-collapse:separate;border-spacing:0;width:100%;min-width:720px
 .t .tp{font-size:12px;color:var(--muted)}
 .t.deal{border-color:var(--accent)}
 .t.deal .tp{color:var(--accent);font-weight:600}
+.t .tf{font-size:11px;font-weight:600;color:var(--rain)}
+.cell .frost{margin-top:1px}
+.cell[aria-pressed="true"] .frost{color:var(--accent-ink)}

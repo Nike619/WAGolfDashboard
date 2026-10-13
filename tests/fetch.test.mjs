@@ -89,7 +89,10 @@ globalThis.fetch = async (url, opts = {}) => {
   }
   if (url.includes('open-meteo')) {
     const n = new URL(url).searchParams.get('latitude').split(',').length;
-    const one = { daily: { time: ['2026-09-25', '2026-09-26'], precipitation_sum: [0.123, 0], precipitation_probability_max: [90, 5] } };
+    const hours = d => [...Array(24)].map((_, h) => `${d}T${String(h).padStart(2, '0')}:00`);
+    const cold = [30, 29, 29, 28, 28, 28, 29, 31, 33, 35, 37, 40, ...Array(12).fill(45)]; // 28°F low, 37°F at 10:00
+    const one = { daily: { time: ['2026-09-25', '2026-09-26'], precipitation_sum: [0.123, 0], precipitation_probability_max: [90, 5], et0_fao_evapotranspiration: [0.031, 0.12], temperature_2m_min: [27.6, 50.2] },
+      hourly: { time: [...hours('2026-09-25'), ...hours('2026-09-26')], temperature_2m: [...cold, ...Array(24).fill(55)], snow_depth: [...Array(24).fill(0.25), ...Array(24).fill(0)] } };
     return J(n === 1 ? one : Array(n).fill(one));
   }
   throw new Error('Unexpected request: ' + url);
@@ -140,5 +143,10 @@ assert.equal(results.ts.days[d0], '0910,54,2', 'TeeSnap: open spots = 4 minus bo
 assert.equal(results.cp.days[d0], '1004,49,3', 'Club Prophet: 18-hole price, full times dropped');
 assert.equal(count('identityapi'), 1, 'Club Prophet guest token is reused for the whole run');
 assert(!results.priv && !results.paused, 'private and paused courses get no tee times');
+assert.deepEqual(Object.values(weather)[0].days['2026-09-25'], [0.12, 90, 0.03, 28, '11:00', 3], 'weather day: rain, chance, evaporation, low, frost until, snow depth (in)');
+assert.deepEqual(Object.values(weather)[0].days['2026-09-26'], [0, 5, 0.12, 50, null, 0], 'warm day: no frost, no snow');
+assert.equal(mod.frostUntil([...Array(24).fill(30)]), '24:00', 'never thaws: frost all day');
+assert.equal(mod.frostUntil([...Array(24).fill(40)]), null, 'mild night: no frost');
+assert.equal(mod.frostUntil([1, 2]), null, 'missing hours: no estimate');
 console.log(`All tests passed (${Object.keys(results).length} courses with results, ${Object.keys(weather).length} with rain, ${calls.length} requests).`);
 await fs.rm(tmp, { recursive: true, force: true });

@@ -3,8 +3,8 @@ import { $, esc } from '../lib/dom.js';
 import { dLabel, dNum, nowPT } from '../lib/dates.js';
 import { isStale, lowestPrice } from '../model/teetimes.js';
 import { state } from '../state.js';
-import { times } from '../select.js';
-import { wetTag, courseName, badge } from './ui.js';
+import { times, frost } from '../select.js';
+import { wetTag, courseName, badge, frostWhen } from './ui.js';
 
 export function initTeeSheet(render, { showTimes }) {
   $('#sheet').addEventListener('click', e => {
@@ -25,7 +25,7 @@ export function renderTeeSheet({ sheetCs, dates, minBy }) {
         if (t == null) return `<td><div class="cell na">not checked${wetTag(c, d) ? '<br>' + wetTag(c, d) : ''}</div></td>`;
         const n = t.length, min = n ? lowestPrice(t) : null; const cheap = n && minBy[d] && min === minBy[d].p;
         const sel = state.sel && state.sel.c === c.id && state.sel.d === d;
-        return `<td><button type="button" class="cell${n ? '' : ' zero'}${n && n <= 3 ? ' low' : ''}${cheap ? ' cheapest' : ''}${old ? ' old' : ''}" data-c="${esc(c.id)}" data-d="${d}" aria-pressed="${sel}" aria-label="${esc(c.name)} ${dLabel(d)}: ${n} times"><span class="cnt">${n}</span><span class="from">${n && isFinite(min) ? 'from $' + min : n ? 'open' : d === nowPT().d ? 'none left' : 'full'}</span>${wetTag(c, d)}</button></td>`;
+        return `<td><button type="button" class="cell${n ? '' : ' zero'}${n && n <= 3 ? ' low' : ''}${cheap ? ' cheapest' : ''}${old ? ' old' : ''}" data-c="${esc(c.id)}" data-d="${d}" aria-pressed="${sel}" aria-label="${esc(c.name)} ${dLabel(d)}: ${n} times"><span class="cnt">${n}</span><span class="from">${n && isFinite(min) ? 'from $' + min : n ? 'open' : d === nowPT().d ? 'none left' : 'full'}</span>${wetTag(c, d)}${frost(c, d) ? `<span class="frost" title="Frost delay likely ${frostWhen(frost(c, d))}">Frost</span>` : ''}</button></td>`;
       }).join('') + '</tr>';
   }).join('');
   $('#sheet').innerHTML = head + '<tbody>' + (body || `<tr><td colspan="${dates.length + 1}" style="padding:24px;text-align:center" class="empty">No courses with online tee times in this region.</td></tr>`) + '</tbody>';

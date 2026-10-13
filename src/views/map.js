@@ -16,7 +16,7 @@ const RADAR = 'https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-
 const RADAR_TIME = 'https://mesonet.agron.iastate.edu/data/gis/images/4326/USCOMP/n0q_0.json';
 const RADAR_ATTR = 'Radar: NWS NEXRAD via <a href="https://mesonet.agron.iastate.edu/">IEM</a>';
 const FRAMES = [50, 45, 40, 35, 30, 25, 20, 15, 10, 5, 0]; // minutes before the latest scan
-const GROUND_VAR = { dry: '--accent', damp: '--muted', soft: '--sand', soggy: '--warn' };
+const GROUND_VAR = { dry: '--accent', damp: '--muted', soft: '--sand', soggy: '--warn', snow: '--rain' };
 const WA = [[-124.8, 45.5], [-116.9, 49.05]];
 const dark = matchMedia('(prefers-color-scheme: dark)');
 

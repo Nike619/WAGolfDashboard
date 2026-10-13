@@ -62,7 +62,7 @@
 
   <section data-tabs="times">
     <div class="sec-h"><h2>Tee sheet</h2>
-      <div class="legend"><span><i class="sw" style="background:var(--accent)"></i>Lowest price that day</span><span><i class="sw" style="background:var(--sand)"></i>3 or fewer left</span><span class="wet w-dry"><i></i>Dry</span><span class="wet w-damp"><i></i>Damp</span><span class="wet w-soft"><i></i>Soft</span><span class="wet w-soggy"><i></i>Soggy</span></div></div>
+      <div class="legend"><span><i class="sw" style="background:var(--accent)"></i>Lowest price that day</span><span><i class="sw" style="background:var(--sand)"></i>3 or fewer left</span><span class="wet w-dry"><i></i>Dry</span><span class="wet w-damp"><i></i>Damp</span><span class="wet w-soft"><i></i>Soft</span><span class="wet w-soggy"><i></i>Soggy</span><span class="wet w-snow"><i></i>Snow</span><span class="frost">Frost: delay likely</span></div></div>
     <div class="card-scroll"><table class="sheet" id="sheet"></table></div>
   </section>
 
@@ -72,7 +72,7 @@
       <div class="seg map-show" id="mapshow" role="group" aria-label="Courses on the map"><button type="button" data-v="public">Public</button><button type="button" data-v="private">Private</button><button type="button" data-v="all">All</button></div>
       <div class="map-ctrl"><button type="button" id="radarplay" aria-pressed="false" aria-label="Play the last 50 minutes of radar"><svg viewBox="0 0 20 20" aria-hidden="true"><path class="play" d="M6 4.5v11l9-5.5z"/><path class="pause" d="M6 4.5h3v11H6zM11 4.5h3v11h-3z"/></svg></button><span id="radartime">Radar</span></div>
     </div>
-    <div class="legend"><span class="wet w-dry"><i></i>Dry</span><span class="wet w-damp"><i></i>Damp</span><span class="wet w-soft"><i></i>Soft</span><span class="wet w-soggy"><i></i>Soggy</span><span>Ground today · dots are public courses, rings are private clubs · tap one for details</span></div>
+    <div class="legend"><span class="wet w-dry"><i></i>Dry</span><span class="wet w-damp"><i></i>Damp</span><span class="wet w-soft"><i></i>Soft</span><span class="wet w-soggy"><i></i>Soggy</span><span class="wet w-snow"><i></i>Snow</span><span>Ground today · dots are public courses, rings are private clubs · tap one for details</span></div>
   </section>
 
   <section data-tabs="direct">
@@ -90,7 +90,7 @@
   <section data-tabs="about">
     <div>
       <div class="group-h">Ground conditions</div>
-      <div class="group"><div class="row stack"><span>Drainage scores (1–5) come from golfer reviews and course-construction write-ups. Where golfers haven't written about a course, the score comes from the USDA soil survey of the native ground (sand and gravel drain fast, clay and floodplains slowly); it can't see sand caps or drain tile added when the course was built. Ground condition combines the score with rain over the three days before and on the day itself. It is an estimate; call ahead after a big storm.</span></div></div>
+      <div class="group"><div class="row stack"><span>Drainage scores (1–5) come from golfer reviews and course-construction write-ups. Where golfers haven't written about a course, the score comes from the USDA soil survey of the native ground (sand and gravel drain fast, clay and floodplains slowly); it can't see sand caps or drain tile added when the course was built. Ground condition combines the score with rain over the three days before and on the day itself, minus what sun and wind have dried since (evaporation from Open-Meteo), so summer rain clears faster than winter rain. An inch or more of snow shows as Snow. Frost delays are estimated from the forecast low: likely when it's 33°F or colder, lifting about an hour after it reaches 36°F. All of this is an estimate; call ahead after a big storm or a hard freeze.</span></div></div>
     </div>
     <div>
       <div class="group-h" id="ccount">Courses</div>

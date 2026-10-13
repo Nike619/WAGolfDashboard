@@ -65,6 +65,8 @@ Each day's wetness index is:
 
 `(rain that day + rain 1 day before + 0.6 × rain 2 days before + 0.35 × rain 3 days before) × retention`
 
+Each day's rain is first reduced by how much sun and wind have dried since it fell (evaporation from Open-Meteo), so summer rain clears faster than winter rain. An inch or more of snow on the ground shows as **Snow**. Frost delays are estimated from the forecast low.
+
 Retention depends on the drainage score: 5 → 0.15, 4 → 0.35, 3 → 0.6, 2 → 0.85, 1 → 1.0.
 
 The index maps to a label: below 0.08 is Dry, below 0.25 is Damp, below 0.5 is Soft, and anything higher is Soggy. It's an estimate, so call the pro shop after a big storm.

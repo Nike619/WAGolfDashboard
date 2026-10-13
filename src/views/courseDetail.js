@@ -5,7 +5,7 @@ import { showSheet, hideSheet } from '../lib/sheets.js';
 import { isPub } from '../model/courses.js';
 import { state } from '../state.js';
 import { rainOn, rainPct, chance, bookLinkFor } from '../select.js';
-import { wetTag, meter } from './ui.js';
+import { wetTag, meter, frostText } from './ui.js';
 
 // Where the drainage score came from.
 function basis(dr) {
@@ -40,6 +40,7 @@ export function renderCourseDetail() {
         <div class="group">
           <div class="row"><span class="grow">Today</span>${wetTag(c, t0) || '<span class="val">No rain data</span>'}</div>
           <div class="row"><span class="grow">Tomorrow</span>${wetTag(c, shift(t0, 1)) || '<span class="val">—</span>'}</div>
+          ${[[t0, 'Today'], [shift(t0, 1), 'Tomorrow']].filter(([d]) => frostText(c, d)).map(([d, l]) => `<div class="row"><span class="grow">Frost delay<span class="sub">${l}</span></span><span class="val">${esc(frostText(c, d))}</span></div>`).join('')}
           ${w ? `<div class="row stack"><div class="rainrow">${span.map((d, i) => { const p = d >= t0 ? rainPct(c, d) : null; return `<div title="${dLabel(d)}: ${vals[i].toFixed(2)} in${chance(c, d)}"><b class="${d >= t0 ? 'fc' : ''}" style="height:${Math.max(1, Math.round(vals[i] / mx * 30))}px"></b><small class="pct">${p == null ? '' : p + '%'}</small><small>${dLabel(d, true).slice(0, 2)}</small></div>`; }).join('')}</div>
             <div class="src"><span>${vals.slice(0, 3).reduce((a, b) => a + b, 0).toFixed(2)}" last 3 days</span><span>${vals.slice(3).reduce((a, b) => a + b, 0).toFixed(2)}" next 7 (dashed: forecast)</span></div></div>` : '<div class="row"><span class="sub">Rain data arrives with the next check</span></div>'}
         </div>

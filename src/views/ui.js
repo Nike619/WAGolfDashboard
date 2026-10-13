@@ -2,12 +2,19 @@
 import { esc } from '../lib/dom.js';
 import { ago } from '../lib/dates.js';
 import { dataAt, isStale } from '../model/teetimes.js';
-import { wet, chance } from '../select.js';
+import { wet, chance, frost, low } from '../select.js';
+import { fmtT } from '../lib/dates.js';
 
 export const wetTag = (c, d, suffix = '') => {
   const x = wet(c, d);
-  return x ? `<span class="wet w-${x.key}" title="${x.day.toFixed(2)} in that day${chance(c, d)} · ${x.prior.toFixed(2)} in the 3 days before"><i></i>${x.label}${suffix}</span>` : '';
+  if (!x) return '';
+  const tip = x.key === 'snow' ? `${x.snow} in of snow on the ground` : `${x.day.toFixed(2)} in that day${chance(c, d)} · ${x.prior.toFixed(2)} in the 3 days before${x.dried >= 0.01 ? ` · ${x.dried.toFixed(2)} in dried by sun and wind` : ''}`;
+  return `<span class="wet w-${x.key}" title="${tip}"><i></i>${x.label}${suffix}</span>`;
 };
+// "until 10:00 AM" / "all day" for a frost-until time.
+export const frostWhen = f => f === '24:00' ? 'all day' : 'until ' + fmtT(f);
+// Frost delay line for a course and day, e.g. "Likely until 10:00 AM · low 28°F", or ''.
+export const frostText = (c, d) => { const f = frost(c, d); if (!f) return ''; const l = low(c, d); return `Likely ${frostWhen(f)}${l != null ? ` · low ${l}°F` : ''}`; };
 export const meter = s => `<div class="meter" aria-label="Drainage ${s || '?'} of 5">${[1, 2, 3, 4, 5].map(i => `<span class="${i <= (s || 0) ? 'on' : ''}"></span>`).join('')}</div>`;
 export const rankTag = c => c.rank ? `<span class="rank">#${c.rank}</span>` : '';
 export const courseName = c => `<div class="n">${rankTag(c)}<button type="button" data-cd="${esc(c.id)}">${esc(c.name)}</button></div>`;

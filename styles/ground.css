@@ -5,6 +5,8 @@
 .w-damp{color:var(--muted)} .w-damp i{background:var(--muted)}
 .w-soft{color:var(--sand)} .w-soft i{background:var(--sand)}
 .w-soggy{color:var(--warn)} .w-soggy i{background:var(--warn)}
+.w-snow{color:var(--rain)} .w-snow i{background:var(--rain)}
+.frost{font-size:11px;font-weight:600;color:var(--rain)}
 .cell[aria-pressed="true"] .wet{color:var(--accent-ink)} .cell[aria-pressed="true"] .wet i{background:var(--accent-ink)}
 .meter{display:flex;gap:3px}
 .meter span{width:16px;height:8px;border-radius:2px;background:var(--sunk)}

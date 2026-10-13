@@ -101,3 +101,32 @@ assert.equal(withSoil(weak, { score: 4 }).drainage.score, 3, 'low confidence wit
 assert.equal(withSoil(unknown, { score: null }).drainage.score, 3, 'no soil score: unchanged');
 assert.equal(withSoil(unknown, undefined), unknown, 'no soil data: same object');
 console.log('Soil tests passed.');
+
+// ---------- drying, snow, frost ----------
+import { evapOn, lowOn, frostOn, snowOn } from '../src/model/ground.js';
+const wx = (today, before, et, extra = {}) => ({ days: {
+  [day]: [today, 50, et, extra.low ?? null, extra.frost ?? null, extra.snow ?? 0],
+  [shift(day, -1)]: [before, null, et], [shift(day, -2)]: [0, null, et], [shift(day, -3)]: [0, null, et] } });
+// 0.5" yesterday on a drainage-3 course: Soft with no drying; a cool October (0.03"/day) still Soft;
+// a July day (0.2"/day) dries it to Damp.
+assert.equal(wetness(wx(0, 0.5, 0), 3, day).key, 'soft');
+assert.equal(wetness(wx(0, 0.5, 0.03), 3, day).key, 'soft');
+const july = wetness(wx(0, 0.5, 0.2), 3, day);
+assert.equal(july.key, 'damp', 'summer drying');
+assert.ok(Math.abs(july.dried - 0.32) < 1e-9, 'only drying on or after the rain day counts: 2 days × 0.16"');
+assert.ok(Math.abs(july.idx - 0.18 * 0.6) < 1e-9);
+assert.ok(Math.abs(wetness(wx(0.5, 0, 0.2), 3, day).dried - 0.16) < 1e-9, 'rain today: only today\'s drying');
+assert.equal(wetness(wx(0, 0.1, 0.2), 3, day).idx, 0, 'drying more than the rain: never below zero');
+const snowy = wetness(wx(0, 0, 0, { snow: 2.5 }), 5, day);
+assert.equal(snowy.key, 'snow', 'snow on the ground overrides drainage');
+assert.equal(snowy.label, 'Snow');
+assert.ok(dryKey(snowy, 5) > dryKey(wetness(wx(0, 2, 0), 1, day), 1), 'snow sorts after the soggiest course');
+assert.equal(wetness(wx(0, 0, 0, { snow: 0.5 }), 3, day).key, 'dry', 'a dusting is not "Snow"');
+const v = wx(0, 0, 0.04, { low: 28, frost: '10:00', snow: 0 });
+assert.equal(evapOn(v, day), 0.04);
+assert.equal(lowOn(v, day), 28);
+assert.equal(frostOn(v, day), '10:00');
+assert.equal(snowOn(v, day), 0);
+assert.equal(frostOn({ days: { [day]: [0.1, 20] } }, day), null, 'old two-field weather: no frost');
+assert.equal(lowOn({ days: { [day]: [0.1, 20] } }, day), null);
+console.log('Drying, snow and frost tests passed.');

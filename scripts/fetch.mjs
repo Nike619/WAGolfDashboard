@@ -188,14 +188,38 @@ async function fetchCourse(c, dates) {
   return days;
 }
 
-async function fetchWeather(courses) {
+// Frost delay estimate from one day's 24 hourly temperatures (°F, local midnight first): frost is likely when
+// the morning low is 33°F or colder, and lifts about an hour after it warms to 36°F. Returns 'HH:MM',
+// '24:00' if it never warms enough, or null.
+export function frostUntil(temps) {
+  if (!Array.isArray(temps) || temps.length < 24 || temps.some(t => typeof t !== 'number')) return null;
+  const morning = temps.slice(0, 12), low = Math.min(...morning);
+  if (low > 33) return null;
+  for (let h = morning.indexOf(low); h < 24; h++) if (temps[h] >= 36) return h + 1 >= 24 ? '24:00' : String(h + 1).padStart(2, '0') + ':00';
+  return '24:00';
+}
+
+// weather.json: { [courseId]: { updatedAt, days: { 'YYYY-MM-DD': [rain in, rain chance %, evaporation (ET0) in,
+//   low °F, frost until 'HH:MM' | null, snow depth in] } } }. Older files have only the first two; readers treat the rest as missing.
+export async function fetchWeather(courses) {
   const out = {};
   const pts = courses.filter(c => typeof c.lat === 'number' && typeof c.lon === 'number');
+  const r2 = x => x == null ? null : Math.round(x * 100) / 100;
   for (let i = 0; i < pts.length; i += 40) {
     const W = pts.slice(i, i + 40);
-    const u = `https://api.open-meteo.com/v1/forecast?latitude=${W.map(x => x.lat).join(',')}&longitude=${W.map(x => x.lon).join(',')}&daily=precipitation_sum,precipitation_probability_max&past_days=3&forecast_days=7&timezone=America%2FLos_Angeles&precipitation_unit=inch`;
+    const u = `https://api.open-meteo.com/v1/forecast?latitude=${W.map(x => x.lat).join(',')}&longitude=${W.map(x => x.lon).join(',')}&daily=precipitation_sum,precipitation_probability_max,et0_fao_evapotranspiration,temperature_2m_min&hourly=temperature_2m,snow_depth&past_days=3&forecast_days=7&timezone=America%2FLos_Angeles&precipitation_unit=inch&temperature_unit=fahrenheit`;
     let r = await getJSON(u, {}, 3); if (!Array.isArray(r)) r = [r];
-    W.forEach((c, j) => { const d = r[j].daily, days = {}; d.time.forEach((t, k) => days[t] = [Math.round((d.precipitation_sum[k] || 0) * 100) / 100, d.precipitation_probability_max[k] ?? null]); out[c.id] = { updatedAt: new Date().toISOString(), days }; });
+    W.forEach((c, j) => {
+      const d = r[j].daily, h = r[j].hourly || {}, days = {};
+      d.time.forEach((t, k) => {
+        const hrs = (h.time || []).map((ht, n) => ht.startsWith(t) ? n : -1).filter(n => n >= 0);
+        const temps = hrs.map(n => h.temperature_2m?.[n]), snow = hrs.map(n => h.snow_depth?.[n]).filter(x => typeof x === 'number');
+        days[t] = [r2(d.precipitation_sum[k] || 0), d.precipitation_probability_max?.[k] ?? null, r2(d.et0_fao_evapotranspiration?.[k]),
+          d.temperature_2m_min?.[k] == null ? null : Math.round(d.temperature_2m_min[k]), frostUntil(temps),
+          snow.length ? Math.round(Math.max(...snow) * 12 * 10) / 10 : null]; // feet → inches
+      });
+      out[c.id] = { updatedAt: new Date().toISOString(), days };
+    });
   }
   return out;
 }
