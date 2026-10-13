@@ -10,9 +10,9 @@
 .meter span{width:16px;height:8px;border-radius:2px;background:var(--sunk)}
 .meter span.on{background:var(--accent)}
 .rainrow{display:flex;gap:4px;align-items:flex-end;height:58px}
-.rainrow small.pct{color:#5B84A6;min-height:1.2em}
+.rainrow small.pct{color:var(--rain);min-height:1.2em}
 .rainrow div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;height:100%}
-.rainrow b{display:block;width:100%;max-width:18px;background:#5B84A6;border-radius:2px 2px 0 0;min-height:1px}
-.rainrow b.fc{background:transparent;border:1px dashed #5B84A6;border-bottom:0}
+.rainrow b{display:block;width:100%;max-width:18px;background:var(--rain);border-radius:2px 2px 0 0;min-height:1px}
+.rainrow b.fc{background:transparent;border:1px dashed var(--rain);border-bottom:0}
 .rainrow small{font-size:10px;color:var(--muted);font-family:var(--mono)}
 .src{font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 10px}

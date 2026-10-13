@@ -4,6 +4,7 @@ import { state, pref, readHash, writeHash } from './state.js';
 import { dates as dateRange, inView, sorted, cheapestByDay } from './select.js';
 import { isPub, hasTimes } from './model/courses.js';
 import { renderStatus, showLoadError } from './views/status.js';
+import { initTabs, renderTabs } from './views/tabs.js';
 import { initFilters, renderFilters } from './views/filters.js';
 import { initBest, renderBest } from './views/best.js';
 import { initSheet, renderSheet } from './views/sheet.js';
@@ -14,9 +15,11 @@ import { renderCourseDetail } from './views/courseDetail.js';
 import { renderManage } from './views/manage.js';
 
 function render() {
+  pref.access = pref.tab === 'private' ? 'private' : 'public';
   const priv = pref.access === 'private';
-  if (priv && pref.sort === 'price') pref.sort = 'rank';
-  renderFilters(priv);
+  if (pref.tab !== 'times' && pref.sort === 'price') pref.sort = 'rank';
+  renderTabs();
+  renderFilters();
   renderStatus();
   const dates = dateRange(), view = state.courses.filter(inView);
   const sheetCs = sorted(view.filter(c => isPub(c) && hasTimes(c)));
@@ -40,6 +43,7 @@ document.addEventListener('click', e => {
   if (b) { actions.showCourse(b.dataset.cd); return; }
   if (e.target.closest('[data-close]')) { state.csel = null; render(); }
 });
+initTabs(render);
 initFilters(render);
 initBest(render, actions);
 initSheet(render, actions);

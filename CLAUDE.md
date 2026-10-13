@@ -34,6 +34,7 @@ src/views/          one module per page section; each exports render…() and, i
 src/app.js          load data/*.json, render() calls every view, shared actions (showCourse, showTimes)
 ```
 
+- Tabs (`times`, `direct`, `private`, `about`) are in `src/views/tabs.js`. Any element with `data-tabs="times private"` shows only on those tabs; the current tab is `pref.tab` and in the URL hash (`#tab=private`). Old `#access=private` links still open Private.
 - New page sections go in `src/views/` with their CSS in `styles/`; add the `<link>` to `index.html` in cascade order.
 - Keep logic that can be pure in `src/model/` and cover it in `tests/model.test.mjs`.
 - `package.json` exists only to mark `.js` files as ES modules for Node. There are no dependencies; don't add any.
@@ -96,7 +97,7 @@ Systems we can't read yet: EZLinks (Chambers Bay, Suncadia), Agilysys (Gamble Sa
 
 ## Conventions
 
-- The front end has no build step and no frameworks (see "Front end" above). Fonts come from Google Fonts. Colors are CSS tokens on `:root` with dark-mode overrides; keep both themes working and the layout usable at phone width.
+- The front end has no build step and no frameworks (see "Front end" above). The look follows iOS: the system font (SF Pro on Apple devices; no web fonts), iOS system colors, a large title under a translucent navigation bar, segmented controls, and a tab bar (bottom on phones, a floating pill at the top from 900px wide). Colors are CSS tokens on `:root` in `styles/tokens.css` with dark-mode overrides; don't hard-code colors in components; keep both themes working and the layout usable at phone width.
 - User preferences (players, filters, region, sort) live in `localStorage` only.
 - `fetch.mjs` must keep running on plain Node 20 with no `npm install`.
 - The workflow's save step does `git pull --rebase -X theirs` before pushing so overlapping runs don't collide. Keep it.

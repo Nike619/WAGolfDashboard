@@ -1,15 +1,41 @@
-/* Colors, fonts and dark mode. Every other stylesheet uses these variables. */
+/* Colors, fonts and dark mode. Every other stylesheet uses these variables.
+   Palette follows iOS system colors (grouped backgrounds, labels, separators, fills),
+   using the higher-contrast variants where a color is used for text. */
 :root{
-  --bg:#F3F5F0; --surface:#FFFFFF; --sunk:#E9EDE5; --ink:#18201B; --muted:#5F6B63; --line:#D6DDD2;
-  --accent:#1E5B3A; --accent-ink:#FFFFFF; --accent-soft:#DCEBDF; --sand:#B8893A; --sand-soft:#F4E9D2;
-  --warn:#A4461F; --warn-soft:#F6E1D6; --empty:#9AA39C;
-  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
-  --body:"IBM Plex Sans",-apple-system,"Segoe UI",sans-serif;
-  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --bg:#F2F2F7;            /* systemGroupedBackground */
+  --surface:#FFFFFF;       /* secondarySystemGroupedBackground */
+  --sunk:#E9E9EE;          /* header rows, empty meter segments */
+  --ink:#000000;           /* label */
+  --muted:#6C6C70;         /* secondaryLabel, darkened for small text */
+  --line:#D1D1D6;          /* opaque separator */
+  --fill:rgba(118,118,128,.12);   /* tertiarySystemFill: segmented control and select backgrounds */
+  --seg-on:#FFFFFF;        /* selected segment */
+  --seg-shadow:0 3px 8px rgba(0,0,0,.12),0 3px 1px rgba(0,0,0,.04);
+  --material:rgba(249,249,249,.78); /* translucent bars, blurred behind */
+  --bar-line:rgba(0,0,0,.18);
+  --accent:#248A3D;        /* systemGreen, accessible: tint color */
+  --accent-ink:#FFFFFF;
+  --accent-soft:rgba(52,199,89,.16);
+  --sand:#A05A00;          /* systemYellow, accessible: few times left, Soft ground */
+  --sand-soft:rgba(255,204,0,.18);
+  --warn:#D70015;          /* systemRed, accessible: failures, Soggy ground */
+  --warn-soft:rgba(255,59,48,.12);
+  --rain:#007AFF;          /* systemBlue: rain chart */
+  --empty:#AEAEB2;         /* systemGray2 */
+  --radius:12px;
+  --display:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,system-ui,sans-serif;
+  --body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,monospace;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  color-scheme:dark;--bg:#111612;--surface:#182019;--sunk:#0D110E;--ink:#E6ECE5;--muted:#98A59B;--line:#2A342C;
-  --accent:#6FC08F;--accent-ink:#0C1A11;--accent-soft:#1D3526;--sand:#D9B065;--sand-soft:#33291A;--warn:#E48A63;--warn-soft:#3A2219;--empty:#5D685F;}}
+  color-scheme:dark;--bg:#000000;--surface:#1C1C1E;--sunk:#2C2C2E;--ink:#FFFFFF;--muted:#AEAEB2;--line:#38383A;
+  --fill:rgba(118,118,128,.24);--seg-on:#636366;--seg-shadow:0 3px 8px rgba(0,0,0,.12),0 3px 1px rgba(0,0,0,.04);
+  --material:rgba(29,29,31,.78);--bar-line:rgba(255,255,255,.16);
+  --accent:#30D158;--accent-ink:#000000;--accent-soft:rgba(48,209,88,.2);--sand:#FFD60A;--sand-soft:rgba(255,214,10,.18);
+  --warn:#FF6961;--warn-soft:rgba(255,69,58,.2);--rain:#0A84FF;--empty:#636366;}}
 :root[data-theme="dark"]{
-  color-scheme:dark;--bg:#111612;--surface:#182019;--sunk:#0D110E;--ink:#E6ECE5;--muted:#98A59B;--line:#2A342C;
-  --accent:#6FC08F;--accent-ink:#0C1A11;--accent-soft:#1D3526;--sand:#D9B065;--sand-soft:#33291A;--warn:#E48A63;--warn-soft:#3A2219;--empty:#5D685F;}
+  color-scheme:dark;--bg:#000000;--surface:#1C1C1E;--sunk:#2C2C2E;--ink:#FFFFFF;--muted:#AEAEB2;--line:#38383A;
+  --fill:rgba(118,118,128,.24);--seg-on:#636366;--seg-shadow:0 3px 8px rgba(0,0,0,.12),0 3px 1px rgba(0,0,0,.04);
+  --material:rgba(29,29,31,.78);--bar-line:rgba(255,255,255,.16);
+  --accent:#30D158;--accent-ink:#000000;--accent-soft:rgba(48,209,88,.2);--sand:#FFD60A;--sand-soft:rgba(255,214,10,.18);
+  --warn:#FF6961;--warn-soft:rgba(255,69,58,.2);--rain:#0A84FF;--empty:#636366;}

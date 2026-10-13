@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <meta name="description" content="Open tee times and ground conditions across Washington golf courses, updated every morning.">
 <title>Open Tee Sheet</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="styles/tokens.css">
 <link rel="stylesheet" href="styles/base.css">
 <link rel="stylesheet" href="styles/controls.css">
@@ -12,77 +12,74 @@
 <link rel="stylesheet" href="styles/directory.css">
 </head><body>
 
-<div class="wrap" id="app">
-  <header>
-    <div style="display:flex;flex-direction:column;gap:6px">
-      <span class="label">Washington · 18 holes</span>
-      <h1>Open Tee Sheet</h1>
-    </div>
-    <div class="hdr-actions">
-      <div class="status" id="status"><span>Loading…</span></div>
-      <a class="btn primary" id="refresh" target="_blank" rel="noopener" href="#">Run a check</a>
-    </div>
+<nav class="navbar" id="navbar">
+  <span class="navbar-title" id="navtitle" aria-hidden="true">Tee Times</span>
+  <a class="navbar-action" id="refresh" target="_blank" rel="noopener" href="#">Check now</a>
+</nav>
+
+<div class="wrap" id="app" data-tab="times">
+  <header class="largetitle">
+    <span class="label">Open Tee Sheet · Washington</span>
+    <h1 id="pagetitle">Tee Times</h1>
+    <div class="status" id="status"><span>Loading…</span></div>
   </header>
 
-  <div class="filters">
-    <div class="field"><span class="label">Courses</span>
-      <div class="seg" id="access" role="group" aria-label="Public or private">
-        <button type="button" data-v="public">Public</button><button type="button" data-v="private">Private</button>
-      </div></div>
+  <div class="filters" data-tabs="times direct private">
     <div class="field"><label class="label" for="region">Region</label>
       <select id="region"></select></div>
     <div class="field"><label class="label" for="sort">Sort</label>
-      <select id="sort"><option value="rank">Ranking</option><option value="dry">Driest today</option><option value="price" data-pub>Cheapest this week</option></select></div>
-    <div class="field" data-pub><span class="label">Players</span>
+      <select id="sort"><option value="rank">Ranking</option><option value="dry">Driest today</option><option value="price" data-tabs="times">Cheapest this week</option></select></div>
+    <div class="field" data-tabs="times"><span class="label">Players</span>
       <div class="seg" id="players" role="group" aria-label="Players">
         <button type="button" data-v="1">1</button><button type="button" data-v="2">2</button><button type="button" data-v="3">3</button><button type="button" data-v="4">4</button>
       </div></div>
-    <div class="field" data-pub><span class="label">Tee off</span>
+    <div class="field" data-tabs="times"><span class="label">Tee off</span>
       <div class="seg" id="win" role="group" aria-label="Time window">
         <button type="button" data-v="any">Any time</button><button type="button" data-v="am">Before 11</button><button type="button" data-v="mid">11–2</button><button type="button" data-v="pm">After 2</button>
       </div></div>
-    <div class="field" data-pub><label class="label" for="maxp">Max per player</label>
+    <div class="field" data-tabs="times"><label class="label" for="maxp">Max per player</label>
       <select id="maxp"></select></div>
     <button type="button" class="linkbtn" id="share" style="padding-bottom:7px">Copy link to this view</button>
   </div>
 
-  <section>
+  <section data-tabs="times private">
     <div class="sec-h"><h2 id="besth">Driest course each day</h2>
-      <div class="seg" id="bestmode" role="group" aria-label="Pick by" data-pub><button type="button" data-v="dry">Driest</button><button type="button" data-v="price">Cheapest</button></div></div>
+      <div class="seg" id="bestmode" role="group" aria-label="Pick by" data-tabs="times"><button type="button" data-v="dry">Driest</button><button type="button" data-v="price">Cheapest</button></div></div>
     <div class="best" id="best"></div>
     <span class="label" id="bestnote"></span>
   </section>
 
   <div class="detail" id="cdetail" hidden></div>
 
-  <section data-pub>
+  <section data-tabs="times">
     <div class="sec-h"><h2>Tee sheet</h2>
       <div class="legend"><span><i class="sw" style="background:var(--accent)"></i>Lowest price that day</span><span><i class="sw" style="background:var(--sand)"></i>3 or fewer left</span><span class="wet w-dry"><i></i>Dry</span><span class="wet w-damp"><i></i>Damp</span><span class="wet w-soft"><i></i>Soft</span><span class="wet w-soggy"><i></i>Soggy</span></div></div>
     <div class="card-scroll"><table class="sheet" id="sheet"></table></div>
     <div class="detail" id="detail" hidden></div>
   </section>
 
-  <section data-pub>
-    <div class="sec-h"><h2>Book directly</h2><span class="label">No readable online tee sheet</span></div>
+  <section data-tabs="direct">
+    <span class="label">No readable online tee sheet</span>
     <p class="note">These courses use booking systems the dashboard can't read yet, or need a login to see times. Ground conditions still update every morning.</p>
     <div class="card-scroll"><table class="dir" id="linkonly"></table></div>
   </section>
 
-  <section id="privsec">
-    <div class="sec-h"><h2>Private clubs</h2><span class="label">Members and guests · call the pro shop</span></div>
+  <section data-tabs="private">
+    <span class="label">Members and guests · call the pro shop</span>
     <p class="note">Private clubs don't publish tee times. Use this to see which club is playing driest before you ask your member friend or set up reciprocal play. Tap a club for its drainage notes and rain.</p>
     <div class="card-scroll"><table class="dir" id="private"></table></div>
   </section>
 
-  <section>
+  <section data-tabs="about">
     <p class="note">Drainage scores (1–5) come from golfer reviews and course-construction write-ups; many private and small-town clubs have little public discussion and default to 3 with low confidence. Ground condition combines the score with rain over the three days before and on the day itself. It is an estimate; call ahead after a big storm.</p>
     <details class="manage">
       <summary id="ccount">Manage courses</summary>
       <div class="mlist" id="courses"></div>
-      <p class="note">To add, remove or pause a course, edit <code>data/courses.json</code> in the GitHub repo (<a id="editlink" target="_blank" rel="noopener" href="#">open it on GitHub ↗</a>). A course needs a name, <code>access</code> ("public" or "private"), <code>lat</code>/<code>lon</code>, and for tee times a <code>platform</code> with its <code>params</code>. Set <code>"active": false</code> to pause one. Tee times and rain update every morning at about 6:50 AM Pacific; "Run a check" starts one now.</p>
+      <p class="note">To add, remove or pause a course, edit <code>data/courses.json</code> in the GitHub repo (<a id="editlink" target="_blank" rel="noopener" href="#">open it on GitHub ↗</a>). A course needs a name, <code>access</code> ("public" or "private"), <code>lat</code>/<code>lon</code>, and for tee times a <code>platform</code> with its <code>params</code>. Set <code>"active": false</code> to pause one. Tee times and rain update every morning at about 6:50 AM Pacific; "Check now" starts one.</p>
     </details>
   </section>
 </div>
+<nav class="tabbar" id="tabbar" aria-label="Sections"></nav>
 <div class="toast" id="toast" hidden></div>
 
 <script type="module" src="src/app.js"></script>
