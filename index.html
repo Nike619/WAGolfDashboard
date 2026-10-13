@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="styles/base.css">
 <link rel="stylesheet" href="styles/controls.css">
 <link rel="stylesheet" href="styles/tee-sheet.css">
+<link rel="stylesheet" href="styles/day.css">
 <link rel="stylesheet" href="styles/ground.css">
 <link rel="stylesheet" href="styles/directory.css">
 <link rel="stylesheet" href="styles/lists.css">
@@ -24,12 +25,11 @@
 
 <nav class="navbar" id="navbar">
   <span class="navbar-title" id="navtitle" aria-hidden="true">Tee Times</span>
-  <a class="navbar-action" id="refresh" target="_blank" rel="noopener" href="#">Check now</a>
+  <button type="button" class="navbar-action" id="share" aria-label="Share this view"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v11M8 7l4-3.5L16 7"/><path d="M8.5 10.5H6.8a1.8 1.8 0 0 0-1.8 1.8v6.4a1.8 1.8 0 0 0 1.8 1.8h10.4a1.8 1.8 0 0 0 1.8-1.8v-6.4a1.8 1.8 0 0 0-1.8-1.8h-1.7"/></svg></button>
 </nav>
 
 <div class="wrap" id="app" data-tab="times">
   <header class="largetitle">
-    <span class="label">Open Tee Sheet · Washington</span>
     <h1 id="pagetitle">Tee Times</h1>
     <div class="status" id="status"><span>Loading…</span></div>
   </header>
@@ -39,7 +39,7 @@
     <div class="field"><label class="label" for="region">Region</label>
       <select id="region"></select></div>
     <div class="field" data-tabs="times direct private"><label class="label" for="sort">Sort</label>
-      <select id="sort"><option value="rank">Ranking</option><option value="dry">Driest today</option><option value="price" data-tabs="times">Cheapest this week</option></select></div>
+      <select id="sort"><option value="rank">Ranking</option><option value="dry">Driest</option><option value="price" data-tabs="times">Cheapest</option><option value="early" data-tabs="times">Earliest</option></select></div>
     <div class="field" data-tabs="times"><span class="label">Players</span>
       <div class="seg" id="players" role="group" aria-label="Players">
         <button type="button" data-v="1">1</button><button type="button" data-v="2">2</button><button type="button" data-v="3">3</button><button type="button" data-v="4">4</button>
@@ -50,20 +50,21 @@
       </div></div>
     <div class="field" data-tabs="times"><label class="label" for="maxp">Max per player</label>
       <select id="maxp"></select></div>
-    <button type="button" class="linkbtn" id="share" data-tabs="times direct private" style="padding-bottom:7px">Copy link to this view</button>
   </div>
 
   <section data-tabs="times private">
-    <div class="sec-h"><h2 id="besth">Driest course each day</h2>
-      <div class="seg" id="bestmode" role="group" aria-label="Pick by" data-tabs="times"><button type="button" data-v="dry">Driest</button><button type="button" data-v="price">Cheapest</button></div></div>
-    <div class="best" id="best"></div>
-    <span class="label" id="bestnote"></span>
+    <h2 id="daysh" hidden></h2>
+    <div class="best" id="days"></div>
   </section>
 
   <section data-tabs="times">
-    <div class="sec-h"><h2>Tee sheet</h2>
-      <div class="legend"><span><i class="sw" style="background:var(--accent)"></i>Lowest price that day</span><span><i class="sw" style="background:var(--sand)"></i>3 or fewer left</span><span class="wet w-dry"><i></i>Dry</span><span class="wet w-damp"><i></i>Damp</span><span class="wet w-soft"><i></i>Soft</span><span class="wet w-soggy"><i></i>Soggy</span><span class="wet w-snow"><i></i>Snow</span><span class="frost">Frost: delay likely</span></div></div>
-    <div class="card-scroll"><table class="sheet" id="sheet"></table></div>
+    <div class="sec-h"><div><h2 id="dayh">Today</h2><span class="label" id="daynote"></span></div>
+      <div class="seg" id="viewseg" role="group" aria-label="Show"><button type="button" data-v="day">Day</button><button type="button" data-v="week">Week</button></div></div>
+    <div id="dayview"><div class="group" id="daylist"></div></div>
+    <div id="weekview" hidden>
+      <div class="legend"><span><i class="gdot w-dry"></i>Dry</span><span><i class="gdot w-damp"></i>Damp</span><span><i class="gdot w-soft"></i>Soft</span><span><i class="gdot w-soggy"></i>Soggy</span><span><i class="gdot w-snow"></i>Snow</span><span class="frost">❄</span><span>Frost</span><span><i class="sw" style="background:var(--sand)"></i>3 or fewer left</span><span><b>Bold</b> = lowest price that day</span></div>
+      <div class="card-scroll"><table class="sheet" id="sheet"></table></div>
+    </div>
   </section>
 
   <section data-tabs="map">
@@ -89,13 +90,17 @@
 
   <section data-tabs="about">
     <div>
+      <div class="group-h">Data</div>
+      <div class="group" id="aboutdata"></div>
+    </div>
+    <div>
       <div class="group-h">Ground conditions</div>
       <div class="group"><div class="row stack"><span>Drainage scores (1–5) come from golfer reviews and course-construction write-ups. Where golfers haven't written about a course, the score comes from the USDA soil survey of the native ground (sand and gravel drain fast, clay and floodplains slowly); it can't see sand caps or drain tile added when the course was built. Ground condition combines the score with rain over the three days before and on the day itself, minus what sun and wind have dried since (evaporation from Open-Meteo), so summer rain clears faster than winter rain. An inch or more of snow shows as Snow. Frost delays are estimated from the forecast low: likely when it's 33°F or colder, lifting about an hour after it reaches 36°F. All of this is an estimate; call ahead after a big storm or a hard freeze.</span></div></div>
     </div>
     <div>
       <div class="group-h" id="ccount">Courses</div>
       <div class="group" id="courses"></div>
-      <p class="note" style="margin:8px 16px 0">To add, remove or pause a course, edit <code>data/courses.json</code> in the GitHub repo (<a id="editlink" target="_blank" rel="noopener" href="#">open it on GitHub ↗</a>). A course needs a name, <code>access</code> ("public" or "private"), <code>lat</code>/<code>lon</code>, and for tee times a <code>platform</code> with its <code>params</code>. Set <code>"active": false</code> to pause one. Tee times and rain update every morning at about 6:50 AM Pacific; "Check now" starts one.</p>
+      <p class="note" style="margin:8px 16px 0">To add, remove or pause a course, edit <code>data/courses.json</code> in the GitHub repo (<a id="editlink" target="_blank" rel="noopener" href="#">open it on GitHub ↗</a>). A course needs a name, <code>access</code> ("public" or "private"), <code>lat</code>/<code>lon</code>, and for tee times a <code>platform</code> with its <code>params</code>. Set <code>"active": false</code> to pause one. Tee times and rain update every morning at about 6:50 AM Pacific; "Check for new times now" above starts one.</p>
     </div>
   </section>
 </div>

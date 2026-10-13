@@ -5,7 +5,7 @@ import { showSheet, hideSheet } from '../lib/sheets.js';
 import { isPub } from '../model/courses.js';
 import { state } from '../state.js';
 import { rainOn, rainPct, chance, bookLinkFor } from '../select.js';
-import { wetTag, meter, frostText } from './ui.js';
+import { wetTag, meter, frostText, drainWords } from './ui.js';
 import { restrictText, soakText } from '../model/soil.js';
 
 // Where the drainage score came from.
@@ -50,7 +50,7 @@ export function renderCourseDetail() {
       <div>
         <div class="group-h">Drainage</div>
         <div class="group">
-          <div class="row"><span class="grow">${dr.score ? dr.score + ' of 5' : 'Unrated'}<span class="sub">${esc(basis(dr))}</span></span>${meter(dr.score)}</div>
+          <div class="row"><span class="grow">${dr.score ? `${drainWords(dr.score)} (${dr.score} of 5)` : 'Unrated'}<span class="sub">${esc(basis(dr))}</span></span>${meter(dr.score)}</div>
           ${dr.basis === 'soil' ? '' : `<div class="row stack"><span>${esc(dr.summary || 'No drainage notes yet.')}</span>
             ${(dr.sources || []).length ? `<div class="src">${dr.sources.map(s => `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.label)}</a>`).join('')}</div>` : ''}</div>`}
           ${soilRows(c.soil)}

@@ -1,16 +1,16 @@
 /* Ground condition tags, drainage meter, rain chart. */
 .wet{font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 .wet i{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
-.w-dry{color:var(--accent)} .w-dry i{background:var(--accent)}
+.w-dry{color:var(--good)} .w-dry i{background:var(--good)}
 .w-damp{color:var(--muted)} .w-damp i{background:var(--muted)}
 .w-soft{color:var(--sand)} .w-soft i{background:var(--sand)}
 .w-soggy{color:var(--warn)} .w-soggy i{background:var(--warn)}
-.w-snow{color:var(--rain)} .w-snow i{background:var(--rain)}
-.frost{font-size:11px;font-weight:600;color:var(--rain)}
+.w-snow{color:var(--snow)} .w-snow i{background:var(--snow)}
+.frost{font-size:11px;font-weight:600;color:var(--snow)}
 .cell[aria-pressed="true"] .wet{color:var(--accent-ink)} .cell[aria-pressed="true"] .wet i{background:var(--accent-ink)}
 .meter{display:flex;gap:3px}
 .meter span{width:16px;height:8px;border-radius:2px;background:var(--sunk)}
-.meter span.on{background:var(--accent)}
+.meter span.on{background:var(--good)}
 .rainrow{display:flex;gap:4px;align-items:flex-end;height:58px}
 .rainrow small.pct{color:var(--rain);min-height:1.2em}
 .rainrow div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;height:100%}

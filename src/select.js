@@ -2,7 +2,7 @@
 import { state, pref } from './state.js';
 import { DAYS } from './config.js';
 import { dateList, nowPT, todayPT } from './lib/dates.js';
-import { openTimes, bookLink } from './model/teetimes.js';
+import { openTimes, bookLink, lowestPrice, earliest } from './model/teetimes.js';
 import { wetness, rainOn as rainOnW, rainPct as rainPctW, frostOn, lowOn, dryKey } from './model/ground.js';
 import { inView as courseInView } from './model/courses.js';
 import { sunsetPT } from './model/sun.js';
@@ -29,15 +29,19 @@ export const chance = (c, d) => { const p = rainPct(c, d); return p == null ? ''
 export const bookLinkFor = (c, date) => bookLink(c, date, pref.players);
 export const inView = c => courseInView(c, pref);
 
-export function sorted(list) {
-  const t = todayPT();
+// Sort courses by pref.sort. With a day, Driest / Cheapest / Earliest use that day; without one, Driest uses
+// today and Cheapest the whole week (the week grid). Ties fall back to ranking.
+export function sorted(list, day = null) {
+  const t = day || todayPT(), none = Infinity;
+  const pick = (c, ds) => ds.flatMap(d => times(c.id, d) || []);
   const by = {
     rank: c => c.rank ?? 999,
     dry: c => dryKey(wet(c, t), c.drainage?.score),
-    price: c => { let m = Infinity; dates().forEach(d => (times(c.id, d) || []).forEach(x => { if (x.p != null && x.p < m) m = x.p; })); return m; },
+    price: c => { const p = lowestPrice(pick(c, day ? [day] : dates())); return isFinite(p) ? p : none; },
+    early: c => { const e = earliest(pick(c, [t])); return e ? Number(e.replace(':', '')) : none; },
   };
   const f = by[pref.sort] || by.rank;
-  return list.slice().sort((a, b) => f(a) - f(b) || (a.rank ?? 999) - (b.rank ?? 999));
+  return list.slice().sort((a, b) => (f(a) - f(b)) || (a.rank ?? 999) - (b.rank ?? 999));
 }
 
 // Cheapest matching time per date across the given courses: { date: { t, p, s, c } | null }.

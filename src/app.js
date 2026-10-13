@@ -1,14 +1,15 @@
 // Entry point: loads data/*.json, wires up the views, and re-renders on every change.
-import { $ } from './lib/dom.js';
+import { $, setPressed } from './lib/dom.js';
 import { initSheet } from './lib/sheets.js';
-import { state, pref, readHash, writeHash } from './state.js';
-import { dates as dateRange, inView, sorted, cheapestByDay } from './select.js';
+import { state, pref, readHash, writeHash, savePref } from './state.js';
+import { dates as dateRange, inView, sorted, cheapestByDay, times } from './select.js';
 import { isPub, hasTimes } from './model/courses.js';
 import { withSoil } from './model/soil.js';
 import { renderStatus, showLoadError } from './views/status.js';
 import { initTabs, renderTabs } from './views/tabs.js';
 import { initFilters, renderFilters } from './views/filters.js';
-import { initBest, renderBest } from './views/best.js';
+import { initDayPicker, renderDayPicker } from './views/dayPicker.js';
+import { initDayList, renderDayList } from './views/dayList.js';
 import { initTeeSheet, renderTeeSheet } from './views/teeSheet.js';
 import { renderBookDirect } from './views/bookDirect.js';
 import { renderPrivateClubs } from './views/privateClubs.js';
@@ -20,16 +21,27 @@ import { initMap, renderMap } from './views/map.js';
 function render() {
   pref.access = pref.tab === 'private' ? 'private' : 'public';
   const priv = pref.access === 'private';
-  if (pref.tab !== 'times' && pref.sort === 'price') pref.sort = 'rank';
+  if (pref.tab !== 'times' && (pref.sort === 'price' || pref.sort === 'early')) pref.sort = 'rank';
+  const dates = dateRange();
+  if (state.day && !dates.includes(state.day)) state.day = null; // a shared link's day has passed
   renderTabs();
   renderFilters();
   renderStatus();
-  const dates = dateRange(), view = state.courses.filter(inView);
+  const view = state.courses.filter(inView);
   const sheetCs = sorted(view.filter(c => isPub(c) && hasTimes(c)));
-  const ctx = { priv, dates, view, sheetCs, minBy: cheapestByDay(sheetCs, dates) };
-  renderBest(ctx);
-  if (!priv) { renderTeeSheet(ctx); renderBookDirect(ctx); }
-  else renderPrivateClubs(ctx);
+  // Unless a day was picked, show the first day with open times (in the evening, today is usually done).
+  const hasOpen = d => sheetCs.some(c => (times(c.id, d) || []).length);
+  const day = state.day || dates.find(hasOpen) || dates[0];
+  const ctx = { priv, dates, day, view, sheetCs, minBy: cheapestByDay(sheetCs, dates) };
+  renderDayPicker(ctx);
+  if (!priv) {
+    const week = pref.view === 'week';
+    setPressed('#viewseg button', v => v === pref.view);
+    $('#dayview').hidden = week; $('#weekview').hidden = !week;
+    if (week) { $('#dayh').textContent = 'This week'; $('#daynote').textContent = `Open times for ${pref.players} · tap a day for its list`; renderTeeSheet(ctx); }
+    else renderDayList(ctx);
+    renderBookDirect(ctx);
+  } else renderPrivateClubs(ctx);
   renderTimeDetail(priv);
   renderCourseDetail();
   renderManage();
@@ -51,18 +63,13 @@ initSheet($('#detail'), () => { if (state.sel) { state.sel = null; render(); } }
 initSheet($('#cdetail'), () => { if (state.csel) { state.csel = null; render(); } });
 initTabs(render);
 initFilters(render);
-initBest(render, actions);
+initDayPicker(render, actions);
+initDayList(render, actions);
+$('#viewseg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; pref.view = b.dataset.v; savePref(); render(); });
 initTeeSheet(render, actions);
 initMap(actions);
 window.addEventListener('hashchange', () => { readHash(); state.sel = null; render(); });
 writeHash();
-
-// GitHub links derived from the Pages URL (user.github.io/repo)
-(function () {
-  const h = location.hostname, m = h.match(/^([^.]+)\.github\.io$/i); if (!m) return;
-  const repo = location.pathname.split('/').filter(Boolean)[0] || (m[1] + '.github.io'); const base = `https://github.com/${m[1]}/${repo}`;
-  $('#refresh').href = base + '/actions/workflows/update.yml'; const el = $('#editlink'); if (el) el.href = base + '/edit/main/data/courses.json';
-})();
 
 async function load() {
   const bust = '?t=' + Math.floor(Date.now() / 60000);
@@ -70,7 +77,7 @@ async function load() {
   try {
     // soils.json comes from a separate, occasional workflow; the page works without it.
     const [c, r, w, m, s] = await Promise.all([get('courses.json'), get('results.json'), get('weather.json'), get('meta.json'), get('soils.json').catch(() => ({}))]);
-    state.courses = c.map(x => withSoil({ status: 'ready', ...x }, s.courses?.[x.id])); state.results = r; state.weather = w; state.run = m; state.loaded = true; render();
+    state.courses = c.map(x => withSoil({ status: 'ready', ...x }, s.courses?.[x.id])); state.results = r; state.weather = w; state.run = m; state.soilsAt = s.generatedAt || null; state.loaded = true; render();
   } catch (e) { showLoadError(); }
 }
 render();

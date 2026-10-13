@@ -13,14 +13,17 @@
   --seg-shadow:0 3px 8px rgba(0,0,0,.12),0 3px 1px rgba(0,0,0,.04);
   --material:rgba(249,249,249,.78); /* translucent bars, blurred behind */
   --bar-line:rgba(0,0,0,.18);
-  --accent:#248A3D;        /* systemGreen, accessible: tint color */
+  --accent:#0071E3;        /* tint: buttons, links, selected controls (iOS blue) */
   --accent-ink:#FFFFFF;
-  --accent-soft:rgba(52,199,89,.16);
+  --accent-soft:rgba(0,122,255,.13);
+  --good:#248A3D;          /* systemGreen, accessible: only means Dry / up to date */
+  --good-soft:rgba(52,199,89,.16);
   --sand:#A05A00;          /* systemYellow, accessible: few times left, Soft ground */
   --sand-soft:rgba(255,204,0,.18);
   --warn:#D70015;          /* systemRed, accessible: failures, Soggy ground */
   --warn-soft:rgba(255,59,48,.12);
-  --rain:#007AFF;          /* systemBlue: rain chart */
+  --rain:#0071A4;          /* systemCyan, accessible: rain chart */
+  --snow:#5856D6;          /* systemIndigo: snow and frost */
   --empty:#AEAEB2;         /* systemGray2 */
   --sheet:#F2F2F7;          /* sheet background (grouped) */
   --sheet-card:#FFFFFF;     /* grouped rows inside a sheet */
@@ -33,11 +36,11 @@
   color-scheme:dark;--bg:#000000;--surface:#1C1C1E;--sunk:#2C2C2E;--ink:#FFFFFF;--muted:#AEAEB2;--line:#38383A;
   --fill:rgba(118,118,128,.24);--seg-on:#636366;--seg-shadow:0 3px 8px rgba(0,0,0,.12),0 3px 1px rgba(0,0,0,.04);
   --material:rgba(29,29,31,.78);--bar-line:rgba(255,255,255,.16);
-  --accent:#30D158;--accent-ink:#000000;--accent-soft:rgba(48,209,88,.2);--sand:#FFD60A;--sand-soft:rgba(255,214,10,.18);
-  --warn:#FF6961;--warn-soft:rgba(255,69,58,.2);--rain:#0A84FF;--empty:#636366;--sheet:#1C1C1E;--sheet-card:#2C2C2E;}}
+  --accent:#0A84FF;--accent-ink:#FFFFFF;--accent-soft:rgba(10,132,255,.22);--good:#30D158;--good-soft:rgba(48,209,88,.2);--sand:#FFD60A;--sand-soft:rgba(255,214,10,.18);
+  --warn:#FF6961;--warn-soft:rgba(255,69,58,.2);--rain:#64D2FF;--snow:#7D7AFF;--empty:#636366;--sheet:#1C1C1E;--sheet-card:#2C2C2E;}}
 :root[data-theme="dark"]{
   color-scheme:dark;--bg:#000000;--surface:#1C1C1E;--sunk:#2C2C2E;--ink:#FFFFFF;--muted:#AEAEB2;--line:#38383A;
   --fill:rgba(118,118,128,.24);--seg-on:#636366;--seg-shadow:0 3px 8px rgba(0,0,0,.12),0 3px 1px rgba(0,0,0,.04);
   --material:rgba(29,29,31,.78);--bar-line:rgba(255,255,255,.16);
-  --accent:#30D158;--accent-ink:#000000;--accent-soft:rgba(48,209,88,.2);--sand:#FFD60A;--sand-soft:rgba(255,214,10,.18);
-  --warn:#FF6961;--warn-soft:rgba(255,69,58,.2);--rain:#0A84FF;--empty:#636366;--sheet:#1C1C1E;--sheet-card:#2C2C2E;}
+  --accent:#0A84FF;--accent-ink:#FFFFFF;--accent-soft:rgba(10,132,255,.22);--good:#30D158;--good-soft:rgba(48,209,88,.2);--sand:#FFD60A;--sand-soft:rgba(255,214,10,.18);
+  --warn:#FF6961;--warn-soft:rgba(255,69,58,.2);--rain:#64D2FF;--snow:#7D7AFF;--empty:#636366;--sheet:#1C1C1E;--sheet-card:#2C2C2E;}

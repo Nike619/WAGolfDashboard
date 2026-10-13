@@ -19,6 +19,8 @@ html:has(dialog[open]){overflow:hidden}
 .sheet-body{overflow-y:auto;overscroll-behavior:contain;padding:0 16px 24px;display:flex;flex-direction:column;gap:18px}
 .sheet .group{background:var(--sheet-card)}
 .sheet .note{font-size:13px;margin:0 4px}
+.sheet .sum{margin:0 4px;font-size:15px;color:var(--muted);display:flex;flex-wrap:wrap;align-items:center;gap:2px 6px}
+.sheet .sum .wet{font-size:15px}
 .bigbtn{display:block;text-align:center;border-radius:12px;padding:13px 16px;background:var(--accent);color:var(--accent-ink);font-weight:600;font-size:17px;text-decoration:none}
 @media (min-width:700px){
   dialog.sheet{inset:0;margin:auto;max-height:min(84vh,760px);border-radius:14px;padding-bottom:0}

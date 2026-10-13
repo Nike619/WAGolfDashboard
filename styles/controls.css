@@ -8,7 +8,8 @@
 .navbar.scrolled{background:var(--material);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-bottom-color:var(--bar-line)}
 .navbar-title{grid-column:2;font-weight:600;font-size:17px;opacity:0;transition:opacity .2s;white-space:nowrap}
 .navbar.scrolled .navbar-title{opacity:1}
-.navbar-action{grid-column:3;justify-self:end;font-size:17px;text-decoration:none;color:var(--accent);padding:10px 0}
+.navbar-action{grid-column:3;justify-self:end;border:0;background:none;color:var(--accent);padding:8px 0 8px 12px;display:grid;place-items:center}
+.navbar-action svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .largetitle{display:flex;flex-direction:column;gap:2px;padding-top:4px}
 .status{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;color:var(--muted);font-size:13px;margin-top:6px}
 .status b{color:var(--ink);font-weight:500}
@@ -37,7 +38,7 @@
 .btn.primary{background:var(--accent);color:var(--accent-ink)}
 .pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:3px 9px;border-radius:99px;background:var(--fill);color:var(--muted);font-weight:600}
 .pill.err{background:var(--warn-soft);color:var(--warn)}
-.pill.ok{background:var(--accent-soft);color:var(--accent)}
+.pill.ok{background:var(--good-soft);color:var(--good)}
 .pill.stale{background:var(--sand-soft);color:var(--sand)}
 .dot{width:7px;height:7px;border-radius:50%;background:currentColor}
 .linkbtn{border:0;background:none;padding:0;color:var(--accent);font-size:15px}
@@ -72,4 +73,3 @@ select{-webkit-appearance:none;appearance:none;border:0;border-radius:9px;backgr
 .sheet .filters .seg{display:flex}
 .sheet .filters .seg button{flex:1;padding:5px 4px;white-space:nowrap}
 .sheet .filters select{width:100%;background-color:var(--sheet-card)}
-.sheet .filters #share{align-self:flex-start;padding:0}

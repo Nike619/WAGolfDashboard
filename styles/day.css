@@ -1,0 +1,26 @@
+/* Tee Times day view: day picker cards and the list of courses for the picked day. */
+.bday.pick{min-height:0;gap:1px}
+.bday.pick .p{color:var(--ink);font-size:24px;line-height:1.15}
+.bday.pick .c{margin-top:0}
+.bday.pick.none .p{color:var(--empty)}
+.bday.pick.on{background:var(--accent)}
+.bday.pick.on .d,.bday.pick.on .p,.bday.pick.on .c{color:var(--accent-ink)}
+#daysh{font-size:22px}
+
+#daylist .row .sub{white-space:normal}
+.drow{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;color:inherit;text-align:left;padding:11px 16px;min-height:60px;position:relative}
+.drow + .drow::before,.drow + .row::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:.5px solid var(--line)}
+@media (hover:hover){.drow:hover{background:var(--fill)}}
+.drow:active{background:var(--fill)}
+.dmain{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.dmain .nm{font-weight:600;font-size:16px;line-height:1.3}
+.dmain .sub,.dside .sub{font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;align-items:center;gap:0 4px}
+.dmain .sub .wet{font-size:13px}
+.dmain .sub .frost{font-size:13px}
+.dside{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:2px;text-align:right}
+.dside .dt{font-size:17px;font-weight:600}
+.drow::after{content:"";flex:none;width:7px;height:7px;border:solid var(--empty);border-width:2px 2px 0 0;transform:rotate(45deg);margin-left:-2px}
+.more{display:block;padding:11px 16px}
+.more summary{cursor:pointer;color:var(--muted);font-size:14px}
+.more .sub{display:block;margin-top:6px;font-size:13px;color:var(--muted)}
+.drow + .more::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:.5px solid var(--line)}

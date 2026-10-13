@@ -24,6 +24,8 @@ export function openTimes(result, date, { players, win, maxp }, now, dark = null
 }
 
 export const lowestPrice = rows => Math.min(...rows.map(x => x.p ?? Infinity));
+// Earliest 'HH:MM' among rows, or null.
+export const earliest = rows => rows.length ? rows.reduce((m, x) => x.t < m ? x.t : m, rows[0].t) : null;
 export const dataAt = r => r ? (r.dataAt || r.checkedAt || null) : null;
 export const isStale = (r, nowMs = Date.now()) => { const t = dataAt(r); return !t || nowMs - new Date(t) > 12 * 3600e3; };
 

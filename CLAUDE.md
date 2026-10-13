@@ -32,9 +32,14 @@ src/model/          pure logic, no DOM, tested in Node: teetimes.js, ground.js, 
 src/state.js        loaded data, selection, preferences (localStorage + URL hash)
 src/select.js       model functions applied to current state/prefs (times, wet, sorted, cheapestByDay)
 src/views/          one module per page section; each exports render…() and, if it has controls, init…()
+                    Tee Times: dayPicker.js (7 day cards) → dayList.js (default, one row per course for the
+                    picked day) or teeSheet.js (week grid), switched by pref.view
 src/app.js          load data/*.json, render() calls every view, shared actions (showCourse, showTimes)
 ```
 
+- Tee Times leads with **one day as a list**: the day cards pick `state.day` (in the URL hash as `day=YYYY-MM-DD`, not saved; with no day picked it shows the first day that has open times, since today is usually done by evening). Rows show earliest time, count, lowest price, ground, and frost only when it affects that course's times. `pref.view = 'week'` shows the simplified grid (count, price, ground dot, ❄; lowest price bold). Sorts: Ranking, Driest, Cheapest, Earliest; with a day, they use that day.
+- Colors have one meaning each: `--accent` (iOS blue) is the tint for controls and links; `--good` (green) only means Dry / up to date; `--rain` (cyan) is the rain chart; `--snow` (indigo) is snow and frost.
+- The header shows only "Updated 6:52 AM" plus a pill when golfers are affected (offline, data over a day old, failed check). Run details, failures, "Check for new times now" and the soil-data date are in About (`src/views/manage.js`). The navigation bar's button shares the current view (system share sheet, else copy link).
 - Tabs (`times`, `map`, `direct`, `private`, `about`) are in `src/views/tabs.js`. Any element with `data-tabs="times private"` shows only on those tabs; the current tab is `pref.tab` and in the URL hash (`#tab=private`). Old `#access=private` links still open Private.
 - Details open in bottom sheets (`<dialog class="sheet">` + `src/lib/sheets.js`): slide up on phones with drag-to-dismiss, centered card from 700px. `#detail` shows a tee time, `#cdetail` a course, `#filtersheet` the filters (on phones the inline `.filters` element is moved into it and back, so there's one set of controls). Any element with `data-cd="<course id>"` opens that course's sheet.
 - Lists use iOS grouped styles from `styles/lists.css` (`.group`, `.row`). Book Direct and Private use `listRow()` from `src/views/ui.js`: name and today's ground on phones, more columns from 900px.

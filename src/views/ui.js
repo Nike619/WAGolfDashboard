@@ -11,6 +11,8 @@ export const wetTag = (c, d, suffix = '') => {
   const tip = x.key === 'snow' ? `${x.snow} in of snow on the ground` : `${x.day.toFixed(2)} in that day${chance(c, d)} · ${x.prior.toFixed(2)} in the 3 days before${x.dried >= 0.01 ? ` · ${x.dried.toFixed(2)} in dried by sun and wind` : ''}`;
   return `<span class="wet w-${x.key}" title="${tip}"><i></i>${x.label}${suffix}</span>`;
 };
+// Drainage score in words, e.g. "Drains fast".
+export const drainWords = s => ({ 5: 'Drains very fast', 4: 'Drains fast', 3: 'Drains moderately', 2: 'Drains slowly', 1: 'Drains very slowly' })[s] || 'Drainage unknown';
 // "until 10:00 AM" / "all day" for a frost-until time.
 export const frostWhen = f => f === '24:00' ? 'all day' : 'until ' + fmtT(f);
 // Frost delay line for a course and day, e.g. "Likely until 10:00 AM · low 28°F", or ''.

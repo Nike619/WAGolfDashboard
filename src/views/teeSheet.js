@@ -1,10 +1,14 @@
-// The tee sheet: one row per course with readable times, one cell per day.
+// Tee Times, week view: one row per course, one cell per day with the number of open times, the lowest
+// price, a ground dot and ❄ for frost. The lowest price of each day is bold.
 import { $, esc } from '../lib/dom.js';
 import { dLabel, dNum, nowPT } from '../lib/dates.js';
 import { isStale, lowestPrice } from '../model/teetimes.js';
 import { state } from '../state.js';
-import { times, frost } from '../select.js';
-import { wetTag, courseName, badge, frostWhen } from './ui.js';
+import { times, frost, wet } from '../select.js';
+import { courseName, badge, frostWhen } from './ui.js';
+
+// Ground as a small colored dot (word in the tooltip), and ❄ when a frost delay is likely.
+const marks = (c, d) => { const w = wet(c, d), f = frost(c, d); return `<span class="marks">${w ? `<i class="gdot w-${w.key}" title="${w.label}"></i>` : ''}${f ? `<span class="frost" title="Frost delay likely ${frostWhen(f)}">❄</span>` : ''}</span>`; };
 
 export function initTeeSheet(render, { showTimes }) {
   $('#sheet').addEventListener('click', e => {
@@ -22,10 +26,10 @@ export function renderTeeSheet({ sheetCs, dates, minBy }) {
     return `<tr><th class="course" scope="row">${courseName(c)}<div class="m">${esc(c.city || '')}${badge(res)}</div></th>` +
       dates.map(d => {
         const t = times(c.id, d);
-        if (t == null) return `<td><div class="cell na">not checked${wetTag(c, d) ? '<br>' + wetTag(c, d) : ''}</div></td>`;
+        if (t == null) return `<td><div class="cell na">—${marks(c, d)}</div></td>`;
         const n = t.length, min = n ? lowestPrice(t) : null; const cheap = n && minBy[d] && min === minBy[d].p;
         const sel = state.sel && state.sel.c === c.id && state.sel.d === d;
-        return `<td><button type="button" class="cell${n ? '' : ' zero'}${n && n <= 3 ? ' low' : ''}${cheap ? ' cheapest' : ''}${old ? ' old' : ''}" data-c="${esc(c.id)}" data-d="${d}" aria-pressed="${sel}" aria-label="${esc(c.name)} ${dLabel(d)}: ${n} times"><span class="cnt">${n}</span><span class="from">${n && isFinite(min) ? 'from $' + min : n ? 'open' : d === nowPT().d ? 'none left' : 'full'}</span>${wetTag(c, d)}${frost(c, d) ? `<span class="frost" title="Frost delay likely ${frostWhen(frost(c, d))}">Frost</span>` : ''}</button></td>`;
+        return `<td><button type="button" class="cell${n ? '' : ' zero'}${n && n <= 3 ? ' low' : ''}${cheap ? ' cheapest' : ''}${old ? ' old' : ''}" data-c="${esc(c.id)}" data-d="${d}" aria-pressed="${sel}" aria-label="${esc(c.name)} ${dLabel(d)}: ${n} times"><span class="cnt">${n}</span><span class="from">${n && isFinite(min) ? '$' + min : n ? 'open' : '—'}</span>${marks(c, d)}</button></td>`;
       }).join('') + '</tr>';
   }).join('');
   $('#sheet').innerHTML = head + '<tbody>' + (body || `<tr><td colspan="${dates.length + 1}" style="padding:24px;text-align:center" class="empty">No courses with online tee times in this region.</td></tr>`) + '</tbody>';

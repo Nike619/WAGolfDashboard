@@ -149,3 +149,9 @@ assert.equal(restrictText({}), '');
 assert.equal(soakText(2), 'water soaks in slowly');
 assert.equal(soakText(null), '');
 console.log('Hardpan, soak-in and slope tests passed.');
+
+// ---------- earliest ----------
+import { earliest } from '../src/model/teetimes.js';
+assert.equal(earliest(parseDay('1300,40,4;0710,55,4;0900,,2')), '07:10');
+assert.equal(earliest([]), null);
+console.log('Earliest tests passed.');
