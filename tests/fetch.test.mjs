@@ -9,15 +9,19 @@ import assert from 'node:assert';
 import { fileURLToPath } from 'node:url';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'teesheet-'));
+// realpath: on macOS the temp dir is a symlink, and fetch.mjs compares argv[1] with its resolved import.meta.url.
+const tmp = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'teesheet-')));
 await fs.cp(path.join(REPO, 'scripts'), path.join(tmp, 'scripts'), { recursive: true });
 await fs.mkdir(path.join(tmp, 'data'));
 
-// One course per platform, 9 TeeItUp courses to exercise the per-run cap, and one private club.
+// One course per platform, 9 TeeItUp courses to exercise the per-run cap, one private club,
+// a sold-out Chronogolf course and a foreUP course that needs a login (HTTP 401).
 const course = (id, platform, params) => ({ id, name: id, access: 'public', active: true, status: 'ready', lat: 47.2, lon: -122.4, platform, params });
 const courses = [
   course('cg', 'chronogolf', { club: 1, course: 2, aff: 3 }),
+  course('cg-full', 'chronogolf', { club: 5, course: 6, aff: 7 }),
   course('fu', 'foreup', { courseId: 10, scheduleId: 11, bookingClass: 12 }),
+  course('fu-login', 'foreup', { courseId: 20, scheduleId: 21, bookingClass: 22 }),
   course('ts', 'teesnap', { host: 'golfsample', course: 789 }),
   course('cp', 'clubprophet', { host: 'samplecourse', courseIds: '2' }),
   ...Array.from({ length: 9 }, (_, i) => course('ti' + i, 'teeitup', { alias: 'sample-' + i, facility: 100 + i })),
@@ -34,10 +38,10 @@ await fs.writeFile(path.join(tmp, 'data/results.json'), JSON.stringify({
 const realTimeout = globalThis.setTimeout;
 globalThis.setTimeout = (f, ms, ...a) => realTimeout(f, Math.min(ms || 0, 1), ...a);
 
-const seen = new Set();
+const seen = new Set(), calls = [];
 globalThis.fetch = async (url, opts = {}) => {
-  url = String(url);
-  const J = o => new Response(JSON.stringify(o), { status: 200, headers: { 'content-type': 'application/json' } });
+  url = String(url); calls.push(url);
+  const J = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { 'content-type': 'application/json' } });
   if (url.includes('kenna.io')) {
     seen.add('teeitup');
     assert(opts.headers['x-be-alias'], 'TeeItUp calls need the x-be-alias header');
@@ -48,6 +52,7 @@ globalThis.fetch = async (url, opts = {}) => {
       { teetime: '2026-09-28T21:00:00.000Z', maxPlayers: 4, bookedPlayers: 4, rates: [{ holes: 18, greenFeeWalking: 6000 }] },
       { teetime: '2026-09-28T22:00:00.000Z', maxPlayers: 4, bookedPlayers: 0, rates: [{ holes: 9, greenFeeWalking: 2000 }] } ] }]);
   }
+  if (url.includes('chronogolf.com/marketplace/clubs/5/')) return J([]);
   if (url.includes('chronogolf.com/marketplace')) {
     seen.add('chronogolf');
     const n = (url.match(/affiliation_type_ids/g) || []).length; // group size asked for
@@ -60,6 +65,7 @@ globalThis.fetch = async (url, opts = {}) => {
   if (url.includes('foreupsoftware.com/index.php/api/booking/times')) {
     seen.add('foreup');
     assert.equal(opts.headers.Cookie, 'PHPSESSID=abc', 'foreUP calls reuse the session cookie');
+    if (url.includes('schedule_id=21')) return J({ success: false, msg: 'logged out' }, 401);
     return J([{ time: '2026-09-28 15:33', available_spots: 4, green_fee_18: 62 }, { time: '2026-09-28 16:00', available_spots: 0, green_fee_18: 53 }]);
   }
   if (url.includes('api.teesnap.net')) {
@@ -106,22 +112,32 @@ for (let i = 0; i < 3000 && !meta?.finishedAt; i++) {
   try { meta = JSON.parse(await fs.readFile(path.join(tmp, 'data/meta.json'), 'utf8')); } catch {}
   await new Promise(r => realTimeout(r, 20));
 }
+assert(meta?.finishedAt, 'run never finished (did main() start?)');
 const results = JSON.parse(await fs.readFile(path.join(tmp, 'data/results.json'), 'utf8'));
 const weather = JSON.parse(await fs.readFile(path.join(tmp, 'data/weather.json'), 'utf8'));
 const d0 = mod.datesFrom()[0];
+const count = s => calls.filter(u => u.includes(s)).length;
 
 assert.deepEqual([...seen].sort(), ['chronogolf', 'clubprophet', 'foreup', 'teeitup', 'teesnap'], 'every platform was called');
-assert.equal(meta.status, 'done');
-assert.equal(meta.failed, 0, 'no fetch failures');
-assert.equal(meta.bookable, 13);
+assert.equal(meta.status, 'partial');
+assert.equal(meta.failed, 1, 'only the login-only foreUP course fails');
+assert.equal(meta.bookable, 15);
 assert.equal(meta.deferred, 2, 'TeeItUp capped at 7 of its 9 courses');
 assert.equal(results.ti8.days['2026-01-01'], '0800,50,4', 'the most recently checked TeeItUp course is deferred and keeps its data');
 assert.equal(Object.keys(weather).length, courses.filter(c => c.active !== false).length, 'rain data for every active course, private included');
 assert.equal(results.ti0.days[d0], '0720,70,4;1300,89,1', 'TeeItUp: 18-hole rates only, full times dropped');
 assert.equal(results.cg.days[d0], '0703,166,2;1142,166,4;1600,166,1', 'Chronogolf records the largest group that fits');
+assert.equal(count('/clubs/1/teetimes'), 7 * 4, 'Chronogolf asks 1, 4, 3, 2 players while group sizes are unknown');
+assert.equal(results['cg-full'].days[d0], '', 'sold-out Chronogolf day is empty');
+assert.equal(count('/clubs/5/teetimes'), 7, 'Chronogolf stops after 1 player when nothing is open');
+assert.ok(results['cg-full'].warning, 'a course with no times all week gets a warning');
 assert.equal(results.fu.days[d0], '1533,62,4', 'foreUP drops full times');
+assert.equal(results['fu-login'].ok, false, 'login-only foreUP course fails');
+assert.match(results['fu-login'].error, /HTTP 401/);
+assert.equal(count('schedule_id=21'), 1, 'a 401 is not retried');
 assert.equal(results.ts.days[d0], '0910,54,2', 'TeeSnap: open spots = 4 minus booked golfers; held times dropped');
 assert.equal(results.cp.days[d0], '1004,49,3', 'Club Prophet: 18-hole price, full times dropped');
+assert.equal(count('identityapi'), 1, 'Club Prophet guest token is reused for the whole run');
 assert(!results.priv && !results.paused, 'private and paused courses get no tee times');
-console.log(`All tests passed (${Object.keys(results).length} courses with results, ${Object.keys(weather).length} with rain).`);
+console.log(`All tests passed (${Object.keys(results).length} courses with results, ${Object.keys(weather).length} with rain, ${calls.length} requests).`);
 await fs.rm(tmp, { recursive: true, force: true });

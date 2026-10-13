@@ -128,7 +128,8 @@ form.add input{width:100%}
 .meter{display:flex;gap:3px}
 .meter span{width:16px;height:8px;border-radius:2px;background:var(--sunk)}
 .meter span.on{background:var(--accent)}
-.rainrow{display:flex;gap:4px;align-items:flex-end;height:44px}
+.rainrow{display:flex;gap:4px;align-items:flex-end;height:58px}
+.rainrow small.pct{color:#5B84A6;min-height:1.2em}
 .rainrow div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;height:100%}
 .rainrow b{display:block;width:100%;max-width:18px;background:#5B84A6;border-radius:2px 2px 0 0;min-height:1px}
 .rainrow b.fc{background:transparent;border:1px dashed #5B84A6;border-bottom:0}
@@ -192,6 +193,7 @@ section{display:flex;flex-direction:column;gap:12px}
       </div></div>
     <div class="field" data-pub><label class="label" for="maxp">Max per player</label>
       <select id="maxp"><option value="0">No limit</option><option value="60">$60</option><option value="75">$75</option><option value="100">$100</option><option value="125">$125</option></select></div>
+    <button type="button" class="linkbtn" id="share" style="padding-bottom:7px">Copy link to this view</button>
   </div>
 
   <section>
@@ -237,12 +239,20 @@ section{display:flex;flex-direction:column;gap:12px}
 const $=s=>document.querySelector(s);
 const state={settings:{players:2,days:7},courses:[],results:{},weather:{},run:null,sel:null,csel:null,loaded:false};
 const pref={win:'any',maxp:0,best:'dry',access:'public',region:'',sort:'rank',players:2};
+const DEF={...pref};
 try{Object.assign(pref,JSON.parse(localStorage.getItem('teeprefs')||'{}'))}catch(e){}
-const savePref=()=>{try{localStorage.setItem('teeprefs',JSON.stringify(pref))}catch(e){}};
+// Filters also live in the URL hash (#players=4&region=South+Sound) so a view can be shared; a link's filters win over saved ones.
+const HASH={access:['public','private'],region:()=>[...$('#region').options].map(o=>o.value),sort:['rank','dry','price'],players:['1','2','3','4'],win:['any','am','mid','pm'],maxp:()=>[...$('#maxp').options].map(o=>o.value),best:['dry','price']};
+function readHash(){const h=new URLSearchParams(location.hash.slice(1));for(const k in HASH){const v=h.get(k),ok=typeof HASH[k]==='function'?HASH[k]():HASH[k];if(v!=null&&ok.includes(v))pref[k]=typeof DEF[k]==='number'?Number(v):v}}
+function writeHash(){const h=new URLSearchParams();for(const k in HASH)if(String(pref[k])!==String(DEF[k]))h.set(k,pref[k]);const s=h.toString();history.replaceState(null,'',s?'#'+s:location.pathname+location.search)}
+readHash();
+const savePref=()=>{try{localStorage.setItem('teeprefs',JSON.stringify(pref))}catch(e){}writeHash()};
 
 
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function todayPT(){return new Date().toLocaleDateString('en-CA',{timeZone:'America/Los_Angeles'})}
+// Pacific date and HH:MM, recomputed at most once a minute (times() runs hundreds of times per render)
+let clk={};function nowPT(){const m=Math.floor(Date.now()/60000);if(clk.m!==m)clk={m,d:todayPT(),t:new Date().toLocaleTimeString('en-GB',{timeZone:'America/Los_Angeles',hour:'2-digit',minute:'2-digit',hourCycle:'h23'})};return clk}
 function shift(iso,n){const d=new Date(iso+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)}
 function dateList(){const t=todayPT(),n=state.settings.days||7;return [...Array(n)].map((_,i)=>shift(t,i))}
 function dLabel(iso,short){const d=new Date(iso+'T12:00:00Z');return d.toLocaleDateString('en-US',{timeZone:'UTC',weekday:'short',...(short?{}:{month:'short',day:'numeric'})})}
@@ -254,16 +264,19 @@ const isStale=r=>{const t=dataAt(r);return !t||Date.now()-new Date(t)>12*3600e3}
 function badge(res){if(!res)return '';if(res.ok===false)return ` <span class="pill err" title="${esc(res.error||'')}">Check failed${dataAt(res)?' · times from '+esc(ago(dataAt(res))):''}</span>`;if(isStale(res))return ` <span class="pill stale">Times from ${esc(ago(dataAt(res)))}</span>`;if(res.warning)return ` <span class="pill stale" title="${esc(res.warning)}">No times all week</span>`;return ''}
 function parseDay(str){if(!str)return[];return str.split(';').filter(Boolean).map(x=>{const [t,p,s]=x.split(',');return {t:t.slice(0,2)+':'+t.slice(2),p:p===''?null:Number(p),s:s===''?null:Number(s)}})}
 function inWin(t){const h=Number(t.slice(0,2))+Number(t.slice(3))/60;if(pref.win==='am')return h<11;if(pref.win==='mid')return h>=11&&h<14;if(pref.win==='pm')return h>=14;return true}
-function times(cid,date){const r=state.results[cid];if(!r||!r.days||!(date in r.days))return null;return parseDay(r.days[date]).filter(x=>(x.s==null||x.s>=pref.players)&&inWin(x.t)&&(!pref.maxp||x.p==null||x.p<=pref.maxp))}
+function times(cid,date){const r=state.results[cid];if(!r||!r.days||!(date in r.days))return null;const n=nowPT(),gone=date===n.d?n.t:'';
+  return parseDay(r.days[date]).filter(x=>x.t>gone&&(x.s==null||x.s>=pref.players)&&inWin(x.t)&&(!pref.maxp||x.p==null||x.p<=pref.maxp))}
 function bookLink(c,date){const u=c.bookUrl||c.website;if(!u)return null;return u.replace('{date}',date).replace('{players}',pref.players)}
 const RET={5:.15,4:.35,3:.6,2:.85,1:1};
 const LV=[['dry','Dry',.08],['damp','Damp',.25],['soft','Soft',.5],['soggy','Soggy',Infinity]];
 function rainOn(c,d){const w=state.weather[c.id];const v=w?.days?.[d];return v?Number(v[0])||0:0}
+function rainPct(c,d){const v=state.weather[c.id]?.days?.[d];return v&&v[1]!=null?Number(v[1]):null}
+const chance=(c,d)=>{const p=rainPct(c,d);return p==null?'':` (${p}% chance)`};
 function wet(c,date){const w=state.weather[c.id];const sc=c.drainage?.score;if(!w||!w.days||!sc)return null;
   const r=n=>rainOn(c,shift(date,n));
   const rain=r(0)+r(-1)+r(-2)*.6+r(-3)*.35;const idx=rain*(RET[sc]??.6);const lv=LV.find(l=>idx<l[2]);
   return {idx,key:lv[0],label:lv[1],prior:r(-1)+r(-2)+r(-3),day:r(0)}}
-const wetTag=(c,d,suffix='')=>{const x=wet(c,d);return x?`<span class="wet w-${x.key}"><i></i>${x.label}${suffix}</span>`:''};
+const wetTag=(c,d,suffix='')=>{const x=wet(c,d);return x?`<span class="wet w-${x.key}" title="${x.day.toFixed(2)} in that day${chance(c,d)} · ${x.prior.toFixed(2)} in the 3 days before"><i></i>${x.label}${suffix}</span>`:''};
 const meter=s=>`<div class="meter" aria-label="Drainage ${s||'?'} of 5">${[1,2,3,4,5].map(i=>`<span class="${i<=(s||0)?'on':''}"></span>`).join('')}</div>`;
 const isPub=c=>(c.access||'public')==='public';
 const hasTimes=c=>!!c.platform&&c.platform!=='link';
@@ -285,6 +298,7 @@ function render(){
   // status
   const r=state.run,st=$('#status');let pill='';
   if(!state.loaded)pill='';
+  else if(r?.finishedAt&&Date.now()-new Date(r.finishedAt)>26*3600e3)pill='<span class="pill err"><i class="dot"></i>Not updated today</span>';
   else if(r?.status==='partial')pill='<span class="pill stale"><i class="dot"></i>Partly updated</span>';
   else if(r?.status==='error')pill='<span class="pill err"><i class="dot"></i>Last check had problems</span>';
   else if(r?.finishedAt)pill='<span class="pill ok"><i class="dot"></i>Up to date</span>';
@@ -318,7 +332,7 @@ function render(){
     dates.map(d=>{const t=times(c.id,d);if(t==null)return `<td><div class="cell na">not checked${wetTag(c,d)?'<br>'+wetTag(c,d):''}</div></td>`;
       const n=t.length,min=n?Math.min(...t.map(x=>x.p??Infinity)):null;const cheap=n&&minBy[d]&&min===minBy[d].p;
       const sel=state.sel&&state.sel.c===c.id&&state.sel.d===d;
-      return `<td><button type="button" class="cell${n?'':' zero'}${n&&n<=3?' low':''}${cheap?' cheapest':''}${old?' old':''}" data-c="${esc(c.id)}" data-d="${d}" aria-pressed="${sel}" aria-label="${esc(c.name)} ${dLabel(d)}: ${n} times"><span class="cnt">${n}</span><span class="from">${n&&isFinite(min)?'from $'+min:n?'open':'full'}</span>${wetTag(c,d)}</button></td>`}).join('')+'</tr>'}).join('');
+      return `<td><button type="button" class="cell${n?'':' zero'}${n&&n<=3?' low':''}${cheap?' cheapest':''}${old?' old':''}" data-c="${esc(c.id)}" data-d="${d}" aria-pressed="${sel}" aria-label="${esc(c.name)} ${dLabel(d)}: ${n} times"><span class="cnt">${n}</span><span class="from">${n&&isFinite(min)?'from $'+min:n?'open':d===nowPT().d?'none left':'full'}</span>${wetTag(c,d)}</button></td>`}).join('')+'</tr>'}).join('');
   $('#sheet').innerHTML=head+'<tbody>'+(body||`<tr><td colspan="${dates.length+1}" style="padding:24px;text-align:center" class="empty">No courses with online tee times in this region.</td></tr>`)+'</tbody>';
   // link-only
   const lo=sorted(view.filter(c=>isPub(c)&&!hasTimes(c)));const t0=todayPT();
@@ -335,7 +349,7 @@ function render(){
     if(!c||t==null){det.hidden=true}else{det.hidden=false;const link=bookLink(c,d);const min=Math.min(...t.map(x=>x.p??Infinity));
       det.innerHTML=`<div class="detail-h"><div><span class="label">${dLabel(d)} · ${pref.players} players</span><h2>${esc(c.name)}</h2></div>${link?`<a href="${esc(link)}" target="_blank" rel="noopener">Open booking page ↗</a>`:''}</div>`+
       (t.length?`<div class="times">${t.map(x=>`<div class="t${x.p===min?' deal':''}"><span class="tt">${fmtT(x.t)}</span><span class="tp">${x.p!=null?'$'+x.p:''}${x.s?` · ${x.s} spots`:''}</span></div>`).join('')}</div>`:'<p class="empty">No times match your filters for this day.</p>')+
-      (()=>{const w=wet(c,d);return w?`<p class="note">Ground: <span class="wet w-${w.key}"><i></i>${w.label}</span> · ${w.prior.toFixed(2)}" of rain in the 3 days before${w.day>=0.01?`, ${w.day.toFixed(2)}" expected that day`:', none expected that day'} · drainage ${c.drainage.score}/5</p>`:''})()+
+      (()=>{const w=wet(c,d);return w?`<p class="note">Ground: <span class="wet w-${w.key}"><i></i>${w.label}</span> · ${w.prior.toFixed(2)}" of rain in the 3 days before${w.day>=0.01?`, ${w.day.toFixed(2)}" expected that day${esc(chance(c,d))}`:', none expected that day'} · drainage ${c.drainage.score}/5</p>`:''})()+
       `<p class="note">Times checked ${esc(ago(dataAt(state.results[c.id])))}. Times go fast; confirm on the booking page.${c.note?' '+esc(c.note):''}</p>`}}
   else det.hidden=true;
   // course detail (drainage + rain)
@@ -348,7 +362,7 @@ function render(){
         ${(dr.sources||[]).length?`<div class="src">${dr.sources.map(s=>`<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.label)}</a>`).join('')}</div>`:''}
         <div class="src">${c.phone?`<span class="phone">${esc(c.phone)}</span>`:''}${c.website?`<a href="${esc(c.website)}" target="_blank" rel="noopener">Website ↗</a>`:''}${isPub(c)&&c.bookUrl?`<a href="${esc(bookLink(c,t0))}" target="_blank" rel="noopener">Booking ↗</a>`:''}</div></div>
       <div style="display:flex;flex-direction:column;gap:6px"><span class="label">Rain (in) · last 3 days, then forecast ${wetTag(c,t0,' today')}</span>
-        ${w?`<div class="rainrow">${span.map((d,i)=>`<div title="${dLabel(d)}: ${vals[i].toFixed(2)} in"><b class="${d>=t0?'fc':''}" style="height:${Math.max(1,Math.round(vals[i]/mx*30))}px"></b><small>${dLabel(d,true).slice(0,2)}</small></div>`).join('')}</div>
+        ${w?`<div class="rainrow">${span.map((d,i)=>{const p=d>=t0?rainPct(c,d):null;return `<div title="${dLabel(d)}: ${vals[i].toFixed(2)} in${chance(c,d)}"><b class="${d>=t0?'fc':''}" style="height:${Math.max(1,Math.round(vals[i]/mx*30))}px"></b><small class="pct">${p==null?'':p+'%'}</small><small>${dLabel(d,true).slice(0,2)}</small></div>`}).join('')}</div>
         <div class="src"><span>${vals.slice(0,3).reduce((a,b)=>a+b,0).toFixed(2)}" last 3 days</span><span>${vals.slice(3).reduce((a,b)=>a+b,0).toFixed(2)}" next 7</span></div>`:'<div class="src">Rain data arrives with the next check</div>'}</div></div>`}
   // manage list
   $('#ccount').textContent=`Manage courses (${state.courses.filter(isPub).length} public · ${state.courses.filter(c=>!isPub(c)).length} private)`;
@@ -369,6 +383,9 @@ $('#bestmode').addEventListener('click',e=>{const b=e.target.closest('button');i
 $('#win').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;pref.win=b.dataset.v;savePref();render()});
 $('#maxp').addEventListener('change',e=>{pref.maxp=Number(e.target.value);savePref();render()});
 $('#players').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;pref.players=Number(b.dataset.v);savePref();render()});
+$('#share').addEventListener('click',async()=>{writeHash();try{await navigator.clipboard.writeText(location.href);toast('Link copied. It opens with these filters.')}catch(e){toast('Copy the address bar to share this view.')}});
+window.addEventListener('hashchange',()=>{readHash();state.sel=null;render()});
+writeHash();
 
 // GitHub links derived from the Pages URL (user.github.io/repo)
 (function(){const h=location.hostname,m=h.match(/^([^.]+)\.github\.io$/i);if(!m)return;const repo=location.pathname.split('/').filter(Boolean)[0]||(m[1]+'.github.io');const base=`https://github.com/${m[1]}/${repo}`;

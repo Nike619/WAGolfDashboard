@@ -36,9 +36,13 @@ async function getJSON(url, headers = {}, tries = 4) {
       const r = await fetch(url, { headers: { 'User-Agent': UA, Accept: 'application/json, text/plain, */*', ...headers }, signal: AbortSignal.timeout(20000) });
       const text = await r.text();
       if (r.status === 429) { last = new Error('Rate limited by the booking site (HTTP 429)'); await sleep(20000 * (i + 1)); continue; }
-      if (!r.ok) throw new Error(`HTTP ${r.status}: ${text.slice(0, 120)}`);
+      if (!r.ok) throw Object.assign(new Error(`HTTP ${r.status}: ${text.slice(0, 120)}`), { status: r.status });
       return JSON.parse(text);
-    } catch (e) { last = e; await sleep(1500 * (i + 1)); }
+    } catch (e) {
+      // 4xx answers (logged out, forbidden, not found) won't change on a retry; only timeouts, 5xx and network errors are retried.
+      if (e.status >= 400 && e.status < 500 && e.status !== 408) throw e;
+      last = e; await sleep(1500 * (i + 1));
+    }
   }
   throw last;
 }
@@ -78,12 +82,18 @@ export function parseChrono(byPlayers) {
   }
   return [...map.values()].sort((a, b) => a[0].localeCompare(b[0]));
 }
+// Ask for 1 player first (every open time), then 4, 3, 2 only while some times still lack a known largest group.
 async function chronogolf(c, date) {
   const { club, course, aff } = c.params, by = {};
-  for (const n of [4, 3, 2, 1]) {
+  const open = list => new Set(list.filter(t => !t.out_of_capacity && !t.frozen).map(t => t.start_time));
+  let left;
+  for (const n of [1, 4, 3, 2]) {
+    if (left && !left.size) break;
     const q = `https://www.chronogolf.com/marketplace/clubs/${club}/teetimes?date=${date}&course_id=${course}&nb_holes=18&` + Array(n).fill('affiliation_type_ids%5B%5D=' + aff).join('&');
     const r = await getJSON(q, { Referer: `https://www.chronogolf.com/club/${club}/widget` });
     by[n] = Array.isArray(r) ? r : [];
+    if (n === 1) left = open(by[1]);
+    else for (const t of open(by[n])) left.delete(t);
     await sleep(PACE_MS);
   }
   return parseChrono(by);
