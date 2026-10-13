@@ -38,13 +38,28 @@ FROM SDA_Get_Mukey_from_intersection_with_WktWgs84('${wkt}') AS m
 JOIN mapunit AS mu ON mu.mukey = m.mukey
 LEFT JOIN muaggatt AS ma ON ma.mukey = m.mukey`;
 
+// Per map unit: average slope, and from its largest component the shallowest restrictive layer (depth and
+// kind, e.g. "Densic material" = dense glacial till), the slowest ksat in the top 50 cm, and topsoil sand/clay.
+export const detailsQuery = mukeys => `SELECT mu.mukey, ma.slopegradwta AS slope, dc.restrict_cm, dc.restrict_kind, dc.ksat_min, dc.sand, dc.clay
+FROM mapunit AS mu
+LEFT JOIN muaggatt AS ma ON ma.mukey = mu.mukey
+OUTER APPLY (SELECT TOP 1
+    (SELECT MIN(r.resdept_r) FROM corestrictions AS r WHERE r.cokey = c.cokey) AS restrict_cm,
+    (SELECT TOP 1 r.reskind FROM corestrictions AS r WHERE r.cokey = c.cokey ORDER BY r.resdept_r) AS restrict_kind,
+    (SELECT MIN(h.ksat_r) FROM chorizon AS h WHERE h.cokey = c.cokey AND h.hzdept_r < 50) AS ksat_min,
+    (SELECT TOP 1 h.sandtotal_r FROM chorizon AS h WHERE h.cokey = c.cokey ORDER BY h.hzdept_r) AS sand,
+    (SELECT TOP 1 h.claytotal_r FROM chorizon AS h WHERE h.cokey = c.cokey ORDER BY h.hzdept_r) AS clay
+  FROM component AS c WHERE c.mukey = mu.mukey ORDER BY c.comppct_r DESC) AS dc
+WHERE mu.mukey IN (${mukeys.map(k => Number(k)).filter(Number.isFinite).join(',')})`;
+
 // Soil Data Access "JSON+COLUMNNAME" answers { Table: [[col names…], [row…], …] }.
 export function parseRows(json) {
   const [cols, ...rows] = json?.Table || [];
   if (!cols) return [];
   return rows.map(r => Object.fromEntries(cols.map((c, i) => [c, r[i]])));
 }
-export const toUnit = r => ({ name: r.muname, area: Number(r.area) || 0, drainage: r.drainage || null, group: r.soilgroup || null, flood: r.flood || null, watertable: r.watertable === '' || r.watertable == null ? null : Number(r.watertable) });
+const n = v => v === '' || v == null ? null : Number(v);
+export const toUnit = r => ({ mukey: String(r.mukey), name: r.muname, area: Number(r.area) || 0, drainage: r.drainage || null, group: r.soilgroup || null, flood: r.flood || null, watertable: r.watertable === '' || r.watertable == null ? null : Number(r.watertable) });
 
 async function sda(query, tries = 3) {
   let last;
@@ -72,11 +87,22 @@ export async function courseSoil(c, query = sda) {
   // No rows can also mean the spatial match didn't work (e.g. a coordinate-system mismatch), so try the other query.
   if (!rows?.length) { method = 'touch'; fallback ??= 'area query returned no rows'; rows = parseRows(await query(touchQuery(wkt))); }
   const units = rows.map(toUnit).filter(u => u.area > 0);
+  // Hardpan, soak-in rate, slope and texture. A separate query, so if it fails the score just omits them.
+  let details = 'ok';
+  if (units.length) {
+    try {
+      const byKey = new Map(parseRows(await query(detailsQuery([...new Set(units.map(u => u.mukey))]))).map(r => [String(r.mukey), r]));
+      for (const u of units) {
+        const r = byKey.get(u.mukey); if (!r) continue;
+        Object.assign(u, { slope: n(r.slope), restrictCm: n(r.restrict_cm), restrictKind: r.restrict_kind || null, ksat: n(r.ksat_min), sand: n(r.sand), clay: n(r.clay) });
+      }
+    } catch (e) { details = String(e.message).slice(0, 300); console.log(`  details query failed for ${c.id} (${details.slice(0, 160)})`); }
+  }
   const { score, coverage } = siteScore(units);
   const total = units.reduce((a, u) => a + u.area, 0) || 1;
   return {
-    score, coverage, method, ...(fallback ? { fallback } : {}),
-    units: units.sort((a, b) => b.area - a.area).slice(0, 4).map(({ area, ...u }) => ({ ...u, share: Math.round(area / total * 100) / 100 })),
+    score, coverage, method, ...(fallback ? { fallback } : {}), ...(details !== 'ok' ? { detailsError: details } : {}),
+    units: units.sort((a, b) => b.area - a.area).slice(0, 4).map(({ area, mukey, ...u }) => ({ ...u, share: Math.round(area / total * 100) / 100 })),
   };
 }
 
@@ -103,6 +129,9 @@ async function main() {
   const fell = Object.values(out.courses).filter(s => s.fallback);
   if (fell.length) out.fallbacks = { count: fell.length, first: fell[0].fallback };
   for (const s of fell) delete s.fallback;
+  const noDetails = Object.values(out.courses).filter(s => s.detailsError);
+  if (noDetails.length) out.detailsErrors = { count: noDetails.length, first: noDetails[0].detailsError };
+  for (const s of noDetails) delete s.detailsError;
   if (failed === courses.length) { console.error('Every soil query failed; data/soils.json not written.'); process.exit(1); }
   await fs.writeFile(path.join(DATA, 'soils.json'), JSON.stringify(out) + '\n');
   console.log(`\nWrote soils for ${Object.keys(out.courses).length} of ${courses.length} courses (${failed} failed).`);

@@ -6,6 +6,7 @@ import { isPub } from '../model/courses.js';
 import { state } from '../state.js';
 import { rainOn, rainPct, chance, bookLinkFor } from '../select.js';
 import { wetTag, meter, frostText } from './ui.js';
+import { restrictText, soakText } from '../model/soil.js';
 
 // Where the drainage score came from.
 function basis(dr) {
@@ -17,7 +18,8 @@ function basis(dr) {
 // Native soil around the course (USDA SSURGO), largest map units first.
 function soilRows(soil) {
   if (!soil?.units?.length) return '';
-  const desc = u => [u.drainage, u.group && 'group ' + u.group, u.flood && !/none/i.test(u.flood) && 'floods ' + u.flood.toLowerCase()].filter(Boolean).join(' · ') || 'Not rated';
+  const desc = u => [u.drainage, u.group && 'group ' + u.group, u.flood && !/none/i.test(u.flood) && 'floods ' + u.flood.toLowerCase(),
+    restrictText(u), soakText(u.ksat), u.slope != null && `${Math.round(u.slope)}% slope`].filter(Boolean).join(' · ') || 'Not rated';
   return soil.units.filter(u => u.share >= 0.1).map(u => `<div class="row"><span class="grow">${esc(u.name)}<span class="sub">${esc(desc(u))}</span></span><span class="val">${Math.round(u.share * 100)}%</span></div>`).join('') +
     `<a class="row chev" href="https://websoilsurvey.nrcs.usda.gov/" target="_blank" rel="noopener"><span class="grow">Native soil, before the course was built<span class="sub">USDA soil survey${soil.score != null ? ` · ${soil.score} of 5 on its own` : ''}</span></span></a>`;
 }

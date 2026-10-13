@@ -130,3 +130,22 @@ assert.equal(snowOn(v, day), 0);
 assert.equal(frostOn({ days: { [day]: [0.1, 20] } }, day), null, 'old two-field weather: no frost');
 assert.equal(lowOn({ days: { [day]: [0.1, 20] } }, day), null);
 console.log('Drying, snow and frost tests passed.');
+
+// ---------- hardpan, soak-in, slope ----------
+import { restrictText, soakText } from '../src/model/soil.js';
+const base = { drainage: 'Moderately well drained', group: 'B' };                      // 3.5
+assert.equal(unitScore(base), 3.5);
+assert.equal(unitScore({ ...base, restrictCm: 40 }), 3, 'hardpan within 50 cm');
+assert.equal(unitScore({ ...base, restrictCm: 75 }), 3.25, 'hardpan within 1 m');
+assert.equal(unitScore({ ...base, restrictCm: 150 }), 3.5, 'deep restriction: no effect');
+assert.equal(unitScore({ ...base, ksat: 1 }), 3, 'very slow layer');
+assert.equal(unitScore({ ...base, ksat: 100 }), 3.75, 'very rapid soil');
+assert.equal(unitScore({ ...base, slope: 20 }), 3.75, 'steep sheds water');
+assert.equal(unitScore({ ...base, slope: 1 }), 3.25, 'flat collects water');
+assert.equal(unitScore({ ...base, restrictCm: 40, ksat: 1, slope: 1 }), 2.25, 'Alderwood-style till on the flat: −1.25');
+assert.equal(restrictText({ restrictCm: 61, restrictKind: 'Densic material' }), 'dense glacial till (hardpan) about 2 ft down');
+assert.equal(restrictText({ restrictCm: 20, restrictKind: 'Lithic bedrock' }), 'bedrock under 1 ft down');
+assert.equal(restrictText({}), '');
+assert.equal(soakText(2), 'water soaks in slowly');
+assert.equal(soakText(null), '');
+console.log('Hardpan, soak-in and slope tests passed.');
