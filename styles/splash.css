@@ -6,7 +6,9 @@ html.splashing{overflow:hidden}
 .splash-inner{width:100%;max-width:380px;display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center}
 .splash-icon{border-radius:16px;box-shadow:0 6px 20px rgba(0,0,0,.15)}
 .splash-msg{margin:0;color:var(--muted);font-size:15px}
-.splash.ready .splash-msg{display:none}
+.splash.ready .splash-msg,.splash.ready .splash-skip{display:none}
+.splash-skip{margin:-10px 0 0;font-size:12px;color:var(--muted);opacity:.8}
+.splash.photo .splash-skip{color:rgba(255,255,255,.75)}
 
 /* Putting animation: the ball rolls along the green and drops into the cup. */
 .putt{position:relative;width:200px;height:30px}

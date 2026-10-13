@@ -46,6 +46,7 @@ export function splashReady() {
   const courses = state.courses.filter(c => isPub(c) && c.active !== false && c.status === 'ready' && (!pref.region || c.region === pref.region));
   const o = outlook(courses.map(c => ({ ground: wet(c, day)?.key || null, rain: rainOn(c, day), chance: rainPct(c, day), low: low(c, day), high: high(c, day), code: code(c, day), frost: frost(c, day) })), { ahead });
   if (!o) { dismiss(); return; }
+  clearTimeout(window.__splashFailsafe); // the app is running; the inline safety timer isn't needed
   setTimeout(() => {
     // Each piece gets --i, its place in the sequence; CSS delays its fade-in by --i × the step.
     let i = 0; const n = () => `style="--i:${i++}"`;
@@ -63,6 +64,7 @@ export function splashReady() {
 }
 
 export function dismiss() {
+  clearTimeout(window.__splashFailsafe);
   if (!splashOn()) return;
   clearTimeout(auto);
   el().classList.add('leaving');

@@ -46,6 +46,16 @@ try {
     document.getElementById('splashmsg').textContent = el.dataset.day === 'tomorrow' ? "Checking tomorrow's tee sheet…" : "Checking today's tee sheet…";
     el.hidden = false;
     document.documentElement.classList.add('splashing');
+    // Safety nets so the screen can never trap anyone, e.g. if a stale cached file stops the app from
+    // starting: tap to skip while loading, close after 10 seconds without the app, close on a startup error.
+    var hide = function () {
+      if (el.classList.contains('ready')) return;   // the app took over (src/views/splash.js)
+      el.hidden = true; document.documentElement.classList.remove('splashing');
+    };
+    window.__splashFailsafe = setTimeout(hide, 10000);
+    el.addEventListener('click', hide);
+    window.addEventListener('error', hide);
+    document.getElementById('splashmsg').insertAdjacentHTML('afterend', '<p class="splash-skip">Tap to skip</p>');
   }
 } catch (e) {}
 </script>
@@ -137,6 +147,6 @@ try {
 <dialog class="sheet" id="cdetail" aria-labelledby="cdetail-title"><div class="sheet-grab"></div><div class="sheet-content"></div></dialog>
 <div class="toast" id="toast" hidden></div>
 
-<script type="module" src="src/app.js"></script>
+<script type="module" src="src/app.js" onerror="window.dispatchEvent(new Event('error'))"></script>
 
 </body></html>
