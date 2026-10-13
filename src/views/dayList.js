@@ -1,10 +1,10 @@
 // Tee Times, day view: one row per course with open times on the picked day, sorted by pref.sort.
-// Each row: name, city, ground and any frost that affects its times; on the right the earliest time and
-// "N times · from $X". Courses with nothing that day are listed by name in one row at the end.
+// Each row: name, city, ground and any frost that affects its times; on the right the lowest price that day
+// and the time of that cheapest slot (or the first time, where the course doesn't publish prices). Courses with nothing that day are listed by name in one row at the end.
 // Tapping a row opens the tee-time sheet.
 import { $, esc } from '../lib/dom.js';
 import { dayName, fmtT } from '../lib/dates.js';
-import { lowestPrice, earliest } from '../model/teetimes.js';
+import { earliest, cheapest } from '../model/teetimes.js';
 import { state, pref, writeHash } from '../state.js';
 import { times, sorted, frost } from '../select.js';
 import { wetTag, rankTag, badge, frostWhen } from './ui.js';
@@ -22,15 +22,14 @@ export function renderDayList({ sheetCs, day, dates }) {
     const t = times(c.id, day);
     (t && t.length ? open : none).push({ c, t });
   }
-  const total = open.reduce((a, x) => a + x.t.length, 0);
   $('#dayh').textContent = dayName(day);
-  $('#daynote').textContent = state.loaded ? `${open.length} ${open.length === 1 ? 'course' : 'courses'} · ${total} open ${total === 1 ? 'time' : 'times'} for ${pref.players}` : '';
+  $('#daynote').textContent = state.loaded ? `${open.length} ${open.length === 1 ? 'course' : 'courses'} · lowest price for ${pref.players}` : '';
   const rows = open.map(({ c, t }) => {
-    const first = earliest(t), p = lowestPrice(t), thaw = frost(c, day);
+    const first = earliest(t), low = cheapest(t), thaw = frost(c, day);
     const frosty = thaw && first < thaw ? `<span class="frost">Frost ${frostWhen(thaw)}</span>` : '';
     return `<button type="button" class="drow" data-c="${esc(c.id)}" data-d="${day}">
       <span class="dmain"><span class="nm">${rankTag(c)}${esc(c.name)}</span><span class="sub">${esc(c.city || '')}${wetTag(c, day) ? ' · ' + wetTag(c, day) : ''}${frosty ? ' · ' + frosty : ''}${badge(state.results[c.id])}</span></span>
-      <span class="dside"><span class="dt">${fmtT(first)}</span><span class="sub">${t.length} ${t.length === 1 ? 'time' : 'times'}${isFinite(p) ? ' · from $' + p : ''}</span></span>
+      <span class="dside">${low ? `<span class="dt">$${low.p}</span><span class="sub">${fmtT(low.t)}</span>` : `<span class="dt">${fmtT(first)}</span><span class="sub">Price on booking site</span>`}</span>
     </button>`;
   }).join('');
   // Courses with nothing that day: one expandable row, not a wall of names.

@@ -24,6 +24,8 @@ export function openTimes(result, date, { players, win, maxp }, now, dark = null
 }
 
 export const lowestPrice = rows => Math.min(...rows.map(x => x.p ?? Infinity));
+// The cheapest priced row (the earliest one on a tie), or null when nothing has a price.
+export const cheapest = rows => rows.reduce((m, x) => x.p == null ? m : !m || x.p < m.p || (x.p === m.p && x.t < m.t) ? x : m, null);
 // Earliest 'HH:MM' among rows, or null.
 export const earliest = rows => rows.length ? rows.reduce((m, x) => x.t < m ? x.t : m, rows[0].t) : null;
 export const dataAt = r => r ? (r.dataAt || r.checkedAt || null) : null;

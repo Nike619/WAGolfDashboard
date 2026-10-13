@@ -29,11 +29,11 @@ table.sheet{border-collapse:separate;border-spacing:0;width:100%;min-width:720px
 .sheet td:nth-child(2){border-left:0}
 .cell{width:100%;min-height:64px;border:0;background:none;padding:8px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
 @media (hover:hover){.cell:hover{background:var(--accent-soft)}}
-.cell .cnt{font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
+.cell .cnt{font-size:17px;font-weight:500;font-variant-numeric:tabular-nums}
 .cell .from{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 .cell.zero .cnt{color:var(--empty)}
 .cell.low{box-shadow:inset 0 -3px 0 var(--sand)}
-.cell.cheapest .from{color:var(--ink);font-weight:700}
+.cell.cheapest .cnt{font-weight:800}
 .cell .marks{display:flex;gap:4px;align-items:center;justify-content:center;min-height:12px;margin-top:2px}
 .gdot{width:8px;height:8px;border-radius:50%;display:inline-block}
 .gdot.w-dry{background:var(--good)} .gdot.w-damp{background:var(--muted)} .gdot.w-soft{background:var(--sand)} .gdot.w-soggy{background:var(--warn)} .gdot.w-snow{background:var(--snow)}

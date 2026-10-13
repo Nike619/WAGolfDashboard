@@ -1,8 +1,8 @@
-// Tee Times, week view: one row per course, one cell per day with the number of open times, the lowest
-// price, a ground dot and ❄ for frost. The lowest price of each day is bold.
+// Tee Times, week view: one row per course, one cell per day with the lowest price and the time of that
+// slot, a ground dot and ❄ for frost. The lowest price of each day across courses is bold.
 import { $, esc } from '../lib/dom.js';
-import { dLabel, dNum, nowPT } from '../lib/dates.js';
-import { isStale, lowestPrice } from '../model/teetimes.js';
+import { dLabel, dNum, nowPT, fmtT } from '../lib/dates.js';
+import { isStale, lowestPrice, cheapest, earliest } from '../model/teetimes.js';
 import { state } from '../state.js';
 import { times, frost, wet } from '../select.js';
 import { courseName, badge, frostWhen } from './ui.js';
@@ -27,9 +27,10 @@ export function renderTeeSheet({ sheetCs, dates, minBy }) {
       dates.map(d => {
         const t = times(c.id, d);
         if (t == null) return `<td><div class="cell na">—${marks(c, d)}</div></td>`;
-        const n = t.length, min = n ? lowestPrice(t) : null; const cheap = n && minBy[d] && min === minBy[d].p;
+        const n = t.length, min = n ? lowestPrice(t) : null, low = n ? cheapest(t) : null; const cheap = n && minBy[d] && min === minBy[d].p;
         const sel = state.sel && state.sel.c === c.id && state.sel.d === d;
-        return `<td><button type="button" class="cell${n ? '' : ' zero'}${n && n <= 3 ? ' low' : ''}${cheap ? ' cheapest' : ''}${old ? ' old' : ''}" data-c="${esc(c.id)}" data-d="${d}" aria-pressed="${sel}" aria-label="${esc(c.name)} ${dLabel(d)}: ${n} times"><span class="cnt">${n}</span><span class="from">${n && isFinite(min) ? '$' + min : n ? 'open' : '—'}</span>${marks(c, d)}</button></td>`;
+        const big = low ? '$' + low.p : n ? 'Open' : '—', small = low ? fmtT(low.t) : n ? fmtT(earliest(t)) : '';
+        return `<td><button type="button" class="cell${n ? '' : ' zero'}${n && n <= 3 ? ' low' : ''}${cheap ? ' cheapest' : ''}${old ? ' old' : ''}" data-c="${esc(c.id)}" data-d="${d}" aria-pressed="${sel}" aria-label="${esc(c.name)} ${dLabel(d)}: ${n ? (low ? 'from $' + low.p + ' at ' + fmtT(low.t) : n + ' times') : 'no times'}"><span class="cnt">${big}</span><span class="from">${small}</span>${marks(c, d)}</button></td>`;
       }).join('') + '</tr>';
   }).join('');
   $('#sheet').innerHTML = head + '<tbody>' + (body || `<tr><td colspan="${dates.length + 1}" style="padding:24px;text-align:center" class="empty">No courses with online tee times in this region.</td></tr>`) + '</tbody>';

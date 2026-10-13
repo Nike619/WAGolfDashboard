@@ -155,3 +155,10 @@ import { earliest } from '../src/model/teetimes.js';
 assert.equal(earliest(parseDay('1300,40,4;0710,55,4;0900,,2')), '07:10');
 assert.equal(earliest([]), null);
 console.log('Earliest tests passed.');
+
+// ---------- cheapest ----------
+import { cheapest } from '../src/model/teetimes.js';
+assert.deepEqual(cheapest(parseDay('1300,40,4;0710,55,4;0900,40,2;1100,,4')), { t: '09:00', p: 40, s: 2 }, 'lowest price, earliest on a tie');
+assert.equal(cheapest(parseDay('0700,,4')), null, 'no prices');
+assert.equal(cheapest([]), null);
+console.log('Cheapest tests passed.');

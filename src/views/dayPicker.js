@@ -1,9 +1,9 @@
 // The strip of 7 days above the list.
-// Tee Times: each day shows how many times match the filters and the lowest price; tapping one picks the day.
+// Tee Times: each day shows the cheapest tee time that matches the filters (price, course, time); tapping one
+// picks the day.
 // Private: the driest club each day; tapping one opens that club.
 import { $, esc } from '../lib/dom.js';
-import { dayName } from '../lib/dates.js';
-import { lowestPrice } from '../model/teetimes.js';
+import { dayName, fmtT } from '../lib/dates.js';
 import { dryKey } from '../model/ground.js';
 import { state, pref, savePref } from '../state.js';
 import { times, wet } from '../select.js';
@@ -16,7 +16,7 @@ export function initDayPicker(render, { showCourse }) {
   });
 }
 
-export function renderDayPicker({ priv, view, sheetCs, dates, day }) {
+export function renderDayPicker({ priv, view, sheetCs, dates, day, minBy }) {
   $('#daysh').textContent = priv ? 'Driest private club each day' : '';
   $('#daysh').hidden = !priv;
   if (priv) {
@@ -31,8 +31,10 @@ export function renderDayPicker({ priv, view, sheetCs, dates, day }) {
     return;
   }
   $('#days').innerHTML = dates.map(d => {
-    const all = sheetCs.flatMap(c => times(c.id, d) || []), p = lowestPrice(all);
+    const any = sheetCs.some(c => (times(c.id, d) || []).length), b = minBy[d];
     const on = pref.view === 'day' && d === day;
-    return `<button type="button" class="bday pick${on ? ' on' : ''}${all.length ? '' : ' none'}" data-d="${d}" aria-pressed="${on}"><span class="d">${dayName(d)}</span><span class="p">${all.length || '—'}</span><span class="c">${all.length ? `${all.length === 1 ? 'time' : 'times'}${isFinite(p) ? ' · from $' + p : ''}` : 'No times'}</span></button>`;
+    const big = b ? '$' + b.p : any ? 'Open' : '—';
+    const small = b ? `${esc(b.c.name)} · ${fmtT(b.t)}` : any ? 'Prices on booking sites' : 'No times';
+    return `<button type="button" class="bday pick${on ? ' on' : ''}${any ? '' : ' none'}" data-d="${d}" aria-pressed="${on}"><span class="d">${dayName(d)}</span><span class="p">${big}</span><span class="c">${small}</span></button>`;
   }).join('');
 }
