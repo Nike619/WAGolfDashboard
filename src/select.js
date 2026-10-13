@@ -5,9 +5,21 @@ import { dateList, nowPT, todayPT } from './lib/dates.js';
 import { openTimes, bookLink } from './model/teetimes.js';
 import { wetness, rainOn as rainOnW, rainPct as rainPctW, dryKey } from './model/ground.js';
 import { inView as courseInView } from './model/courses.js';
+import { sunsetPT } from './model/sun.js';
 
 export const dates = () => dateList(DAYS);
-export const times = (cid, date) => openTimes(state.results[cid], date, pref, nowPT());
+// Sunset per course and date, cached (it doesn't change, and times() runs hundreds of times per render).
+const dusk = new Map();
+export function sunset(c, date) {
+  if (typeof c?.lat !== 'number' || typeof c?.lon !== 'number') return null;
+  const k = c.id + date;
+  if (!dusk.has(k)) dusk.set(k, sunsetPT(c.lat, c.lon, date));
+  return dusk.get(k);
+}
+// id → course, rebuilt whenever a new course list is loaded.
+let index = { list: null, map: null };
+export const courseById = cid => { if (index.list !== state.courses) index = { list: state.courses, map: new Map(state.courses.map(c => [c.id, c])) }; return index.map.get(cid); };
+export const times = (cid, date) => openTimes(state.results[cid], date, pref, nowPT(), sunset(courseById(cid), date));
 export const wet = (c, date) => wetness(state.weather[c.id], c.drainage?.score, date);
 export const rainOn = (c, d) => rainOnW(state.weather[c.id], d);
 export const rainPct = (c, d) => rainPctW(state.weather[c.id], d);

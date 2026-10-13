@@ -62,3 +62,16 @@ assert(!inView(c, { access: 'private', region: '' }));
 assert(!inView({ ...c, active: false }, { access: 'public', region: '' }));
 
 console.log('All model tests passed.');
+
+// ---------- sunset ----------
+import { sunsetPT, sunsetAt } from '../src/model/sun.js';
+const near = (hm, want, mins = 3) => { const m = s => Number(s.slice(0, 2)) * 60 + Number(s.slice(3)); assert.ok(Math.abs(m(hm) - m(want)) <= mins, `${hm} vs ${want}`); };
+near(sunsetPT(47.61, -122.33, '2026-10-12'), '18:26'); // Seattle, PDT
+near(sunsetPT(47.61, -122.33, '2026-06-21'), '21:11'); // longest day
+near(sunsetPT(47.61, -122.33, '2026-12-21'), '16:20'); // shortest day, PST
+near(sunsetPT(47.66, -117.43, '2026-10-12'), '18:07'); // Spokane is further east, so earlier
+assert.equal(sunsetAt(80, 0, '2026-06-21'), null, 'no sunset in polar day');
+const late = { days: { '2026-10-12': '1700,30,4;1820,30,4;2000,30,4;2220,30,4' } };
+assert.deepEqual(openTimes(late, '2026-10-12', all, { d: '', t: '' }, '18:26').map(x => x.t), ['17:00', '18:20'], 'times after sunset are dropped');
+assert.equal(openTimes(late, '2026-10-12', all, { d: '', t: '' }).length, 4, 'no sunset given: keep all');
+console.log('Sunset tests passed.');

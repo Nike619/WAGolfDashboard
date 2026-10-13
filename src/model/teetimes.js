@@ -16,10 +16,11 @@ export function inWindow(t, win) {
 
 // Times for one course and date that fit the filters. null when that date wasn't checked.
 // now = { d: today, t: 'HH:MM' } in Pacific time; today's times at or before now are gone.
-export function openTimes(result, date, { players, win, maxp }, now) {
+// dark = 'HH:MM' sunset; times starting after it are dropped (some booking sites list slots until 10 PM).
+export function openTimes(result, date, { players, win, maxp }, now, dark = null) {
   if (!result || !result.days || !(date in result.days)) return null;
   const gone = date === now.d ? now.t : '';
-  return parseDay(result.days[date]).filter(x => x.t > gone && (x.s == null || x.s >= players) && inWindow(x.t, win) && (!maxp || x.p == null || x.p <= maxp));
+  return parseDay(result.days[date]).filter(x => x.t > gone && (!dark || x.t <= dark) && (x.s == null || x.s >= players) && inWindow(x.t, win) && (!maxp || x.p == null || x.p <= maxp));
 }
 
 export const lowestPrice = rows => Math.min(...rows.map(x => x.p ?? Infinity));

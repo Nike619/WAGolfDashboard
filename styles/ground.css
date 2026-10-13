@@ -1,6 +1,6 @@
 /* Ground condition tags, drainage meter, rain chart. */
-.wet{font-size:11px;letter-spacing:.04em;text-transform:uppercase;font-weight:600;display:inline-flex;align-items:center;gap:4px}
-.wet i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.wet{font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.wet i{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
 .w-dry{color:var(--accent)} .w-dry i{background:var(--accent)}
 .w-damp{color:var(--muted)} .w-damp i{background:var(--muted)}
 .w-soft{color:var(--sand)} .w-soft i{background:var(--sand)}
