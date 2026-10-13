@@ -102,6 +102,7 @@ const mod = await import(script);
 assert.deepEqual(mod.parseTeeItUp([{ teetimes: [{ teetime: '2026-09-28T14:20:00.000Z', maxPlayers: 4, bookedPlayers: 1, rates: [{ holes: 18, greenFeeWalking: 7000 }] }] }]), [['07:20', 70, 3]]);
 assert.deepEqual(mod.parseChrono({ 4: [{ start_time: '08:00', out_of_capacity: true }], 2: [{ start_time: '08:00', out_of_capacity: false, green_fees: [{ subtotal: 60 }] }] }), [['08:00', 60, 2]]);
 assert.deepEqual(mod.parseForeup([{ time: '2026-09-28 15:33', available_spots: 4, green_fee_18: 62 }, { time: '2026-09-28 16:00', available_spots: 0 }]), [['15:33', 62, 4]]);
+assert.deepEqual(mod.parseClubProphet({ isSuccess: true, content: { messageKey: 'NO_TEETIMES', messageTemplate: 'No tee times available' } }), [], 'Club Prophet day with no times');
 assert.equal(mod.datesFrom(new Date('2026-09-27T05:00:00Z'))[0], '2026-09-26', 'dates use Pacific time');
 
 // Full run (main() only runs when argv[1] is the script)

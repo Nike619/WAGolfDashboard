@@ -159,8 +159,9 @@ async function cpsSession(host) {
   cpsSessions.set(host, s);
   return s;
 }
+// A day with nothing left returns content as a message object ({ messageKey: 'NO_TEETIMES' }), not a list.
 export function parseClubProphet(json) {
-  return (json?.content || []).filter(t => t.availableSlot >= 1 && t.isContain18HoleItems !== false).map(t => {
+  return (Array.isArray(json?.content) ? json.content : []).filter(t => t.availableSlot >= 1 && t.isContain18HoleItems !== false).map(t => {
     const f = (t.shItemPrices || []).filter(x => /18/.test(x.shItemCode || '')).map(x => x.displayPrice ?? x.price).filter(x => x != null);
     return [t.startTime.slice(11, 16), f.length ? Math.round(Math.min(...f)) : '', t.availableSlot];
   });
