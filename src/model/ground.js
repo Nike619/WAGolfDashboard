@@ -8,7 +8,7 @@ const WEIGHTS = [1, 1, .6, .35]; // that day, 1, 2 and 3 days before
 const TURF = 0.8;                // turf uses about 80% of reference evaporation (ET0)
 const SNOW_IN = 1;               // an inch or more on the ground: "Snow", whatever the rain
 
-// Per-day fields in weather.json: [rain in, chance %, evaporation in, low °F, frost until, snow depth in].
+// Per-day fields in weather.json: [rain in, chance %, evaporation in, low °F, frost until, snow depth in, high °F, weather code].
 const day = (w, d) => w?.days?.[d];
 const num = (v, i) => v && v[i] != null && v[i] !== '' ? Number(v[i]) : null;
 export function rainOn(w, d) { return num(day(w, d), 0) || 0; }
@@ -17,6 +17,8 @@ export function evapOn(w, d) { return num(day(w, d), 2) || 0; }
 export function lowOn(w, d) { return num(day(w, d), 3); }
 export function frostOn(w, d) { return day(w, d)?.[4] || null; }
 export function snowOn(w, d) { return num(day(w, d), 5) || 0; }
+export function highOn(w, d) { return num(day(w, d), 6); }
+export function codeOn(w, d) { return num(day(w, d), 7); }
 
 // Wetness index: each of the last four days' rain, minus what evaporation has dried since it fell, weighted
 // (that day 1, 1 day before 1, 2 days before 0.6, 3 days before 0.35) and multiplied by the course's retention.

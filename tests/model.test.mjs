@@ -162,3 +162,26 @@ assert.deepEqual(cheapest(parseDay('1300,40,4;0710,55,4;0900,40,2;1100,,4')), { 
 assert.equal(cheapest(parseDay('0700,,4')), null, 'no prices');
 assert.equal(cheapest([]), null);
 console.log('Cheapest tests passed.');
+
+// ---------- outlook ----------
+import { outlook, sky } from '../src/model/outlook.js';
+const ok = (o = {}) => ({ ground: 'dry', rain: 0, chance: 5, low: 44, high: 62, code: 2, frost: null, ...o });
+let o = outlook([ok(), ok(), ok({ ground: 'damp' })]);
+assert.equal(o.verdict, 'Great day for golf');
+assert.equal(o.headline, 'Partly cloudy · 62°F');
+assert.deepEqual(o.lines, ['2 of 3 courses playing dry', 'No rain expected', '44° to 62°F']);
+o = outlook([ok({ frost: '10:00', low: 30 }), ok({ frost: '09:30', low: 31 }), ok()]);
+assert.equal(o.lines[1], 'Frost delays likely at 2 courses, until about 9:30 AM', 'median thaw time');
+o = outlook([ok({ chance: 80, rain: 0.4, code: 63, ground: 'soggy' }), ok({ chance: 75, rain: 0.3, code: 63, ground: 'soft' })]);
+assert.equal(o.verdict, 'Wet day, so bring rain gear');
+assert.equal(o.tone, 'bad');
+assert.equal(o.lines[0], '0 of 2 courses playing dry, 1 soggy');
+assert.equal(o.lines[1], '75% chance of rain, about 0.30"');
+assert.equal(outlook([ok({ ground: 'snow', code: 73 })]).verdict, 'Not a golf day');
+assert.equal(outlook([ok({ chance: 50 })]).verdict, 'Showers possible');
+assert.equal(outlook([ok({ high: 41 })]).verdict, 'Chilly, so layer up');
+assert.equal(outlook([ok({ code: null, high: null, low: null })]).headline, 'Golf outlook', 'older weather data: no sky or high');
+assert.equal(outlook([]), null);
+assert.equal(outlook([ok(), ok({ ground: 'soft' })], { ahead: true }).lines[0], '1 of 2 courses should be dry', 'tomorrow is a forecast');
+assert.equal(sky(0).label, 'Sunny'); assert.equal(sky(81).label, 'Showers'); assert.equal(sky(95).key, 'storm');
+console.log('Outlook tests passed.');

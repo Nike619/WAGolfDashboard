@@ -1,0 +1,51 @@
+/* Loading screen with today's outlook (src/views/splash.js): a ball rolling to the cup while data loads,
+   then the outlook card. */
+html.splashing{overflow:hidden}
+.splash{position:fixed;inset:0;z-index:100;background:var(--bg);display:grid;place-items:center;padding:24px max(20px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));transition:opacity .35s ease}
+.splash.leaving{opacity:0;pointer-events:none}
+.splash-inner{width:100%;max-width:380px;display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center}
+.splash-icon{border-radius:16px;box-shadow:0 6px 20px rgba(0,0,0,.15)}
+.splash-msg{margin:0;color:var(--muted);font-size:15px}
+.splash.ready .splash-msg{display:none}
+
+/* Putting animation: the ball rolls along the green and drops into the cup. */
+.putt{position:relative;width:200px;height:30px}
+.putt .green{position:absolute;left:0;right:0;top:12px;height:16px;border-radius:8px;background:var(--good-soft)}
+.putt .cup{position:absolute;right:14px;top:4px;width:18px;height:8px;border-radius:50%;background:rgba(0,0,0,.55)}
+.putt .ball{position:absolute;left:4px;top:5px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35),inset -2px -2px 3px rgba(0,0,0,.12);animation:putt 1.9s cubic-bezier(.25,.1,.3,1) infinite}
+@keyframes putt{
+  0%{transform:translateX(0);opacity:1}
+  70%{transform:translateX(165px);opacity:1}
+  80%{transform:translateX(169px) translateY(9px) scale(.75);opacity:1}
+  88%,100%{transform:translateX(169px) translateY(11px) scale(.55);opacity:0}
+}
+.splash.ready .putt{display:none}
+@media (prefers-reduced-motion:reduce){.putt .ball{animation:none;transform:translateX(169px) translateY(9px) scale(.75)}}
+
+/* The outlook card */
+.splash-card{width:100%;background:var(--surface);border-radius:18px;padding:20px 20px 16px;display:flex;flex-direction:column;align-items:center;gap:8px;box-shadow:0 8px 30px rgba(0,0,0,.08);animation:card-in .3s ease-out}
+@keyframes card-in{from{opacity:0}}
+.splash-card .skyicon{width:52px;height:52px}
+.splash-card .skyicon svg{width:100%;height:100%;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.splash-card .when{font-size:13px;color:var(--muted);font-weight:500}
+.splash-card h2{font-size:24px}
+.verdict{font-size:15px;font-weight:600;padding:5px 12px;border-radius:99px}
+.verdict.good{background:var(--good-soft);color:var(--good)}
+.verdict.fair{background:var(--sand-soft);color:var(--sand)}
+.verdict.bad{background:var(--warn-soft);color:var(--warn)}
+.splash-card ul{list-style:none;margin:6px 0 0;padding:0;width:100%;text-align:left}
+.splash-card li{padding:9px 2px;border-top:.5px solid var(--line);font-size:15px}
+.splash-card .where{font-size:12px;color:var(--muted);margin-top:4px}
+.splash-go{width:100%}
+/* One piece at a time: each .step (and the button) fades up after --i steps. */
+.splash .step,.splash.ready .splash-go{opacity:0;animation:step-in .45s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(var(--i, 0) * var(--step, 350ms))}
+@keyframes step-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.splash .step,.splash.ready .splash-go{animation:none;opacity:1}}
+
+/* Background photo: fades in under a dark gradient; text turns light and the card becomes frosted glass. */
+.splash::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.25),rgba(0,0,0,.55)),var(--photo,none) center/cover no-repeat;opacity:0;transition:opacity .6s ease}
+.splash.photo::before{opacity:1}
+.splash-inner{position:relative}
+.splash.photo .splash-msg{color:rgba(255,255,255,.9)}
+.splash.photo .putt .green{background:rgba(255,255,255,.25)}
+.splash.photo .splash-card{background:var(--material);-webkit-backdrop-filter:saturate(180%) blur(24px);backdrop-filter:saturate(180%) blur(24px);box-shadow:0 10px 40px rgba(0,0,0,.3)}

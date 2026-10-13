@@ -200,14 +200,15 @@ export function frostUntil(temps) {
 }
 
 // weather.json: { [courseId]: { updatedAt, days: { 'YYYY-MM-DD': [rain in, rain chance %, evaporation (ET0) in,
-//   low °F, frost until 'HH:MM' | null, snow depth in] } } }. Older files have only the first two; readers treat the rest as missing.
+//   low °F, frost until 'HH:MM' | null, snow depth in, high °F, WMO weather code] } } }. Older files have fewer
+//   fields; readers treat missing ones as unknown.
 export async function fetchWeather(courses) {
   const out = {};
   const pts = courses.filter(c => typeof c.lat === 'number' && typeof c.lon === 'number');
   const r2 = x => x == null ? null : Math.round(x * 100) / 100;
   for (let i = 0; i < pts.length; i += 40) {
     const W = pts.slice(i, i + 40);
-    const u = `https://api.open-meteo.com/v1/forecast?latitude=${W.map(x => x.lat).join(',')}&longitude=${W.map(x => x.lon).join(',')}&daily=precipitation_sum,precipitation_probability_max,et0_fao_evapotranspiration,temperature_2m_min&hourly=temperature_2m,snow_depth&past_days=3&forecast_days=7&timezone=America%2FLos_Angeles&precipitation_unit=inch&temperature_unit=fahrenheit`;
+    const u = `https://api.open-meteo.com/v1/forecast?latitude=${W.map(x => x.lat).join(',')}&longitude=${W.map(x => x.lon).join(',')}&daily=precipitation_sum,precipitation_probability_max,et0_fao_evapotranspiration,temperature_2m_min,temperature_2m_max,weather_code&hourly=temperature_2m,snow_depth&past_days=3&forecast_days=7&timezone=America%2FLos_Angeles&precipitation_unit=inch&temperature_unit=fahrenheit`;
     let r = await getJSON(u, {}, 3); if (!Array.isArray(r)) r = [r];
     W.forEach((c, j) => {
       const d = r[j].daily, h = r[j].hourly || {}, days = {};
@@ -216,7 +217,8 @@ export async function fetchWeather(courses) {
         const temps = hrs.map(n => h.temperature_2m?.[n]), snow = hrs.map(n => h.snow_depth?.[n]).filter(x => typeof x === 'number');
         days[t] = [r2(d.precipitation_sum[k] || 0), d.precipitation_probability_max?.[k] ?? null, r2(d.et0_fao_evapotranspiration?.[k]),
           d.temperature_2m_min?.[k] == null ? null : Math.round(d.temperature_2m_min[k]), frostUntil(temps),
-          snow.length ? Math.round(Math.max(...snow) * 12 * 10) / 10 : null]; // feet → inches
+          snow.length ? Math.round(Math.max(...snow) * 12 * 10) / 10 : null, // feet → inches
+          d.temperature_2m_max?.[k] == null ? null : Math.round(d.temperature_2m_max[k]), d.weather_code?.[k] ?? null];
       });
       out[c.id] = { updatedAt: new Date().toISOString(), days };
     });

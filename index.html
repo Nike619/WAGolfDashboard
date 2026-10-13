@@ -21,7 +21,34 @@
 <link rel="stylesheet" href="styles/lists.css">
 <link rel="stylesheet" href="styles/sheets.css">
 <link rel="stylesheet" href="styles/map.css">
+<link rel="stylesheet" href="styles/splash.css">
 </head><body>
+
+<div class="splash" id="splash" hidden aria-live="polite">
+  <div class="splash-inner">
+    <img src="icons/icon.svg" alt="" class="splash-icon" width="72" height="72">
+    <div class="putt" aria-hidden="true"><span class="green"><span class="cup"></span></span><span class="ball"></span></div>
+    <p class="splash-msg" id="splashmsg">Checking today's tee sheet…</p>
+    <div class="splash-card" id="splashcard" hidden></div>
+    <button type="button" class="bigbtn splash-go" id="splashgo" hidden>Let's play</button>
+  </div>
+</div>
+<script>
+// Loading screen with the day's golf outlook, on the first open of a session. Until 3:30 PM Pacific it
+// covers today; from 3:30 PM it covers tomorrow. Decided here, before the app loads, so it appears with
+// no flash. The rest is in src/views/splash.js.
+try {
+  if (!sessionStorage.getItem('teesplash')) {
+    sessionStorage.setItem('teesplash', '1');
+    var t = new Date().toLocaleTimeString('en-GB', { timeZone: 'America/Los_Angeles', hourCycle: 'h23' });
+    var el = document.getElementById('splash');
+    el.dataset.day = t >= '15:30' ? 'tomorrow' : 'today';
+    document.getElementById('splashmsg').textContent = el.dataset.day === 'tomorrow' ? "Checking tomorrow's tee sheet…" : "Checking today's tee sheet…";
+    el.hidden = false;
+    document.documentElement.classList.add('splashing');
+  }
+} catch (e) {}
+</script>
 
 <nav class="navbar" id="navbar">
   <span class="navbar-title" id="navtitle" aria-hidden="true">Tee Times</span>

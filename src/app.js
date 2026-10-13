@@ -17,6 +17,7 @@ import { renderTimeDetail } from './views/timeDetail.js';
 import { renderCourseDetail } from './views/courseDetail.js';
 import { renderManage } from './views/manage.js';
 import { initMap, renderMap } from './views/map.js';
+import { initSplash, splashReady, dismiss as dismissSplash } from './views/splash.js';
 
 function render() {
   pref.access = pref.tab === 'private' ? 'private' : 'public';
@@ -68,6 +69,7 @@ initDayList(render, actions);
 $('#viewseg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; pref.view = b.dataset.v; savePref(); render(); });
 initTeeSheet(render, actions);
 initMap(actions);
+initSplash();
 window.addEventListener('hashchange', () => { readHash(); state.sel = null; render(); });
 writeHash();
 
@@ -77,8 +79,8 @@ async function load() {
   try {
     // soils.json comes from a separate, occasional workflow; the page works without it.
     const [c, r, w, m, s] = await Promise.all([get('courses.json'), get('results.json'), get('weather.json'), get('meta.json'), get('soils.json').catch(() => ({}))]);
-    state.courses = c.map(x => withSoil({ status: 'ready', ...x }, s.courses?.[x.id])); state.results = r; state.weather = w; state.run = m; state.soilsAt = s.generatedAt || null; state.loaded = true; render();
-  } catch (e) { showLoadError(); }
+    state.courses = c.map(x => withSoil({ status: 'ready', ...x }, s.courses?.[x.id])); state.results = r; state.weather = w; state.run = m; state.soilsAt = s.generatedAt || null; state.loaded = true; render(); splashReady();
+  } catch (e) { showLoadError(); dismissSplash(); }
 }
 render();
 load();

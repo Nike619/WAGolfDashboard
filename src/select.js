@@ -3,7 +3,7 @@ import { state, pref } from './state.js';
 import { DAYS } from './config.js';
 import { dateList, nowPT, todayPT } from './lib/dates.js';
 import { openTimes, bookLink, lowestPrice, earliest } from './model/teetimes.js';
-import { wetness, rainOn as rainOnW, rainPct as rainPctW, frostOn, lowOn, dryKey } from './model/ground.js';
+import { wetness, rainOn as rainOnW, rainPct as rainPctW, frostOn, lowOn, highOn, codeOn, dryKey } from './model/ground.js';
 import { inView as courseInView } from './model/courses.js';
 import { sunsetPT } from './model/sun.js';
 
@@ -25,6 +25,8 @@ export const rainOn = (c, d) => rainOnW(state.weather[c.id], d);
 export const rainPct = (c, d) => rainPctW(state.weather[c.id], d);
 export const frost = (c, d) => frostOn(state.weather[c.id], d);
 export const low = (c, d) => lowOn(state.weather[c.id], d);
+export const high = (c, d) => highOn(state.weather[c.id], d);
+export const code = (c, d) => codeOn(state.weather[c.id], d);
 export const chance = (c, d) => { const p = rainPct(c, d); return p == null ? '' : ` (${p}% chance)`; };
 export const bookLinkFor = (c, date) => bookLink(c, date, pref.players);
 export const inView = c => courseInView(c, pref);
