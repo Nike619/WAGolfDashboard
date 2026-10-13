@@ -22,6 +22,8 @@
   --warn-soft:rgba(255,59,48,.12);
   --rain:#007AFF;          /* systemBlue: rain chart */
   --empty:#AEAEB2;         /* systemGray2 */
+  --sheet:#F2F2F7;          /* sheet background (grouped) */
+  --sheet-card:#FFFFFF;     /* grouped rows inside a sheet */
   --radius:12px;
   --display:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,system-ui,sans-serif;
   --body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,system-ui,sans-serif;
@@ -32,10 +34,10 @@
   --fill:rgba(118,118,128,.24);--seg-on:#636366;--seg-shadow:0 3px 8px rgba(0,0,0,.12),0 3px 1px rgba(0,0,0,.04);
   --material:rgba(29,29,31,.78);--bar-line:rgba(255,255,255,.16);
   --accent:#30D158;--accent-ink:#000000;--accent-soft:rgba(48,209,88,.2);--sand:#FFD60A;--sand-soft:rgba(255,214,10,.18);
-  --warn:#FF6961;--warn-soft:rgba(255,69,58,.2);--rain:#0A84FF;--empty:#636366;}}
+  --warn:#FF6961;--warn-soft:rgba(255,69,58,.2);--rain:#0A84FF;--empty:#636366;--sheet:#1C1C1E;--sheet-card:#2C2C2E;}}
 :root[data-theme="dark"]{
   color-scheme:dark;--bg:#000000;--surface:#1C1C1E;--sunk:#2C2C2E;--ink:#FFFFFF;--muted:#AEAEB2;--line:#38383A;
   --fill:rgba(118,118,128,.24);--seg-on:#636366;--seg-shadow:0 3px 8px rgba(0,0,0,.12),0 3px 1px rgba(0,0,0,.04);
   --material:rgba(29,29,31,.78);--bar-line:rgba(255,255,255,.16);
   --accent:#30D158;--accent-ink:#000000;--accent-soft:rgba(48,209,88,.2);--sand:#FFD60A;--sand-soft:rgba(255,214,10,.18);
-  --warn:#FF6961;--warn-soft:rgba(255,69,58,.2);--rain:#0A84FF;--empty:#636366;}
+  --warn:#FF6961;--warn-soft:rgba(255,69,58,.2);--rain:#0A84FF;--empty:#636366;--sheet:#1C1C1E;--sheet-card:#2C2C2E;}

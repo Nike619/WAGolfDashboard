@@ -15,6 +15,8 @@ export function shift(iso, n) { const d = new Date(iso + 'T12:00:00Z'); d.setUTC
 export function dateList(n) { const t = todayPT(); return [...Array(n)].map((_, i) => shift(t, i)); }
 
 export function dLabel(iso, short) { const d = new Date(iso + 'T12:00:00Z'); return d.toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'short', ...(short ? {} : { month: 'short', day: 'numeric' }) }); }
+// "Today", "Tomorrow", else "Wed, Oct 14".
+export function dayName(iso) { const t = todayPT(); return iso === t ? 'Today' : iso === shift(t, 1) ? 'Tomorrow' : dLabel(iso); }
 export function dNum(iso) { const d = new Date(iso + 'T12:00:00Z'); return (d.getUTCMonth() + 1) + '/' + d.getUTCDate(); }
 export function fmtT(hm) { let [h, m] = hm.split(':').map(Number); const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return h + ':' + String(m).padStart(2, '0') + ' ' + ap; }
 export function ago(iso) {

@@ -1,12 +1,21 @@
-// "Book directly": public courses whose tee sheet can't be read.
+// "Book Direct": public courses whose tee sheet can't be read. Tapping a row opens the course sheet.
 import { $, esc } from '../lib/dom.js';
 import { todayPT, shift } from '../lib/dates.js';
 import { isPub, hasTimes } from '../model/courses.js';
+import { state } from '../state.js';
 import { sorted, bookLinkFor } from '../select.js';
-import { wetTag, meter, courseName } from './ui.js';
+import { wetTag, meter, listRow, listHead } from './ui.js';
+
+const COLS = 'minmax(0,2.4fr) 96px 92px 92px 128px 110px';
 
 export function renderBookDirect({ view }) {
   const lo = sorted(view.filter(c => isPub(c) && !hasTimes(c))); const t0 = todayPT();
-  $('#linkonly').innerHTML = `<thead><tr><th>Course</th><th>Drainage</th><th>Today</th><th>Tomorrow</th><th>Phone</th><th></th></tr></thead><tbody>` +
-    (lo.map(c => `<tr><td>${courseName(c)}<div class="m">${esc(c.city || '')}${c.note ? ' · ' + esc(c.note) : ''}</div></td><td>${meter(c.drainage?.score)}</td><td>${wetTag(c, t0) || '<span class="hint">—</span>'}</td><td>${wetTag(c, shift(t0, 1)) || '<span class="hint">—</span>'}</td><td><span class="phone">${esc(c.phone || '')}</span></td><td>${bookLinkFor(c, t0) ? `<a href="${esc(bookLinkFor(c, t0))}" target="_blank" rel="noopener">Booking site ↗</a>` : ''}</td></tr>`).join('') || '<tr><td colspan="6" class="empty">None in this region.</td></tr>') + '</tbody>';
+  const el = $('#linkonly'); el.style.setProperty('--cols', COLS);
+  el.innerHTML = lo.length ? listHead(['Course', 'Drainage', 'Today', 'Tomorrow', 'Phone', '']) + lo.map(c => listRow(c, `${esc(c.city || '')}${c.note ? ' · ' + esc(c.note) : ''}`, [
+    meter(c.drainage?.score),
+    { today: true, html: wetTag(c, t0) || '<span class="hint">—</span>' },
+    wetTag(c, shift(t0, 1)) || '<span class="hint">—</span>',
+    `<span class="phone">${esc(c.phone || '')}</span>`,
+    bookLinkFor(c, t0) ? `<a href="${esc(bookLinkFor(c, t0))}" target="_blank" rel="noopener">Booking site ↗</a>` : '',
+  ])).join('') : `<div class="row"><span class="empty">${state.loaded ? 'None in this region.' : 'Loading…'}</span></div>`;
 }

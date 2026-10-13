@@ -1,0 +1,11 @@
+/* iOS grouped lists: rounded groups of rows with inset separators. Used in sheets and list pages. */
+.group{background:var(--surface);border-radius:var(--radius);overflow:hidden}
+.group-h{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.02em;margin:0 16px 6px}
+.row{display:flex;align-items:center;gap:12px;padding:11px 16px;min-height:44px;position:relative;color:inherit;text-decoration:none;width:100%;border:0;background:none;text-align:left;font-size:16px}
+.row + .row::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:.5px solid var(--line)}
+.row .grow{flex:1;min-width:0}
+.row .sub{display:block;font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+.row .val{color:var(--muted);font-size:15px;text-align:right}
+a.row .val{color:var(--accent)}
+.row.stack{flex-direction:column;align-items:stretch;gap:8px}
+.chev::after{content:"";flex:none;width:7px;height:7px;border:solid var(--empty);border-width:2px 2px 0 0;transform:rotate(45deg);margin-right:3px}

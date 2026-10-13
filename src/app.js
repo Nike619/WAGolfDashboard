@@ -1,5 +1,6 @@
 // Entry point: loads data/*.json, wires up the views, and re-renders on every change.
 import { $ } from './lib/dom.js';
+import { initSheet } from './lib/sheets.js';
 import { state, pref, readHash, writeHash } from './state.js';
 import { dates as dateRange, inView, sorted, cheapestByDay } from './select.js';
 import { isPub, hasTimes } from './model/courses.js';
@@ -7,7 +8,7 @@ import { renderStatus, showLoadError } from './views/status.js';
 import { initTabs, renderTabs } from './views/tabs.js';
 import { initFilters, renderFilters } from './views/filters.js';
 import { initBest, renderBest } from './views/best.js';
-import { initSheet, renderSheet } from './views/sheet.js';
+import { initTeeSheet, renderTeeSheet } from './views/teeSheet.js';
 import { renderBookDirect } from './views/bookDirect.js';
 import { renderPrivateClubs } from './views/privateClubs.js';
 import { renderTimeDetail } from './views/timeDetail.js';
@@ -25,7 +26,7 @@ function render() {
   const sheetCs = sorted(view.filter(c => isPub(c) && hasTimes(c)));
   const ctx = { priv, dates, view, sheetCs, minBy: cheapestByDay(sheetCs, dates) };
   renderBest(ctx);
-  if (!priv) { renderSheet(ctx); renderBookDirect(ctx); }
+  if (!priv) { renderTeeSheet(ctx); renderBookDirect(ctx); }
   else renderPrivateClubs(ctx);
   renderTimeDetail(priv);
   renderCourseDetail();
@@ -33,20 +34,22 @@ function render() {
 }
 
 const actions = {
-  showCourse(id) { state.csel = id; render(); $('#cdetail').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); },
-  showTimes(c, d) { state.sel = { c, d }; render(); $('#detail').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); },
+  showCourse(id) { state.csel = id; render(); },
+  showTimes(c, d) { state.sel = { c, d }; render(); },
 };
 
-// Any course name opens its course panel; [data-close] closes it.
+// Any element with data-cd (a course name, a list row) opens that course's sheet.
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-cd]');
-  if (b) { actions.showCourse(b.dataset.cd); return; }
-  if (e.target.closest('[data-close]')) { state.csel = null; render(); }
+  if (b) actions.showCourse(b.dataset.cd);
 });
+// Closing a sheet any way (Done, Esc, backdrop, drag) clears what it was showing.
+initSheet($('#detail'), () => { if (state.sel) { state.sel = null; render(); } });
+initSheet($('#cdetail'), () => { if (state.csel) { state.csel = null; render(); } });
 initTabs(render);
 initFilters(render);
 initBest(render, actions);
-initSheet(render, actions);
+initTeeSheet(render, actions);
 window.addEventListener('hashchange', () => { readHash(); state.sel = null; render(); });
 writeHash();
 

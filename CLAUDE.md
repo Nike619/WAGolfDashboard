@@ -26,7 +26,7 @@ Plain ES modules and CSS files, served by GitHub Pages exactly as committed. Lay
 index.html          page shell: markup, stylesheet links, <script type="module" src="src/app.js">
 styles/             tokens.css (colors, fonts, dark mode) → base → controls → tee-sheet → ground → directory
 src/config.js       DAYS, REGIONS, MAX_PRICES
-src/lib/            dates.js (Pacific dates/times, formatting), dom.js ($, esc, toast)
+src/lib/            dates.js (Pacific dates/times, formatting), dom.js ($, esc, toast), sheets.js (bottom sheets on <dialog>)
 src/model/          pure logic, no DOM, tested in Node: teetimes.js, ground.js, courses.js
 src/state.js        loaded data, selection, preferences (localStorage + URL hash)
 src/select.js       model functions applied to current state/prefs (times, wet, sorted, cheapestByDay)
@@ -35,6 +35,9 @@ src/app.js          load data/*.json, render() calls every view, shared actions 
 ```
 
 - Tabs (`times`, `direct`, `private`, `about`) are in `src/views/tabs.js`. Any element with `data-tabs="times private"` shows only on those tabs; the current tab is `pref.tab` and in the URL hash (`#tab=private`). Old `#access=private` links still open Private.
+- Details open in bottom sheets (`<dialog class="sheet">` + `src/lib/sheets.js`): slide up on phones with drag-to-dismiss, centered card from 700px. `#detail` shows a tee time, `#cdetail` a course, `#filtersheet` the filters (on phones the inline `.filters` element is moved into it and back, so there's one set of controls). Any element with `data-cd="<course id>"` opens that course's sheet.
+- Lists use iOS grouped styles from `styles/lists.css` (`.group`, `.row`). Book Direct and Private use `listRow()` from `src/views/ui.js`: name and today's ground on phones, more columns from 900px.
+- "Tee sheet" (`src/views/teeSheet.js`) is the grid of days; "sheet" alone means a bottom sheet.
 - New page sections go in `src/views/` with their CSS in `styles/`; add the `<link>` to `index.html` in cascade order.
 - Keep logic that can be pure in `src/model/` and cover it in `tests/model.test.mjs`.
 - `package.json` exists only to mark `.js` files as ES modules for Node. There are no dependencies; don't add any.
@@ -51,7 +54,7 @@ src/app.js          load data/*.json, render() calls every view, shared actions 
 
 - `node tests/fetch.test.mjs`: offline test with mocked responses for all five booking platforms, using its own sample courses (not `data/courses.json`). Run it after any change to `scripts/fetch.mjs`. When you add a platform, add a mock and an assertion for it.
 - `node tests/model.test.mjs`: tests the page's pure logic in `src/model/` (tee-time filtering, ground conditions). Run it after changing anything there.
-- After changing `src/` or `styles/`, preview the page and check both themes and phone width.
+- After changing `src/`, run `for f in $(find src -name '*.js'); do node --check "$f"; done` to catch syntax errors, then preview the page and check both themes, phone width and 900px+.
 - `node scripts/fetch.mjs`: real run against the live sites. It overwrites `data/results.json`, `data/weather.json` and `data/meta.json`, so don't commit those from a local run unless you mean to. It takes 10+ minutes because of rate-limit pacing.
 - Preview the page with `python3 -m http.server` in the repo root, then open http://localhost:8000. It fetches `data/*.json` with relative URLs, so opening the file directly with `file://` won't load data.
 

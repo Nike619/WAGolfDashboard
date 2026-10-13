@@ -1,19 +1,23 @@
-/* Book-directly and private-club tables, course names, manage list, course detail layout. */
-.rank{font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 5px;margin-right:6px;vertical-align:1px}
-.course .n button,.dir .n button{border:0;background:none;padding:0;font:inherit;font-weight:600;text-align:left;color:var(--ink);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
-.course .n button:hover,.dir .n button:hover{text-decoration-color:var(--accent)}
-table.dir{border-collapse:collapse;width:100%;min-width:760px;font-size:14px}
-.dir th,.dir td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
-.dir thead th{background:var(--sunk);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
-.dir tbody tr:last-child td{border-bottom:0}
-.dir .m{font-size:12px;color:var(--muted)}
-.dir td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
-.phone{font-family:var(--mono);font-size:13px;user-select:all;white-space:nowrap}
+/* Course lists (Book Direct, Private): rows open the course sheet; extra columns on wide screens. Course names and rank tags. */
+.rank{font-size:11px;font-weight:600;color:var(--muted);background:var(--fill);border-radius:5px;padding:1px 5px;margin-right:6px;vertical-align:1px}
+.course .n button{border:0;background:none;padding:0;font:inherit;font-weight:600;text-align:left;color:var(--ink);text-decoration:none}
+.course .n button:hover{color:var(--accent)}
+.phone{font-size:14px;user-select:all;white-space:nowrap}
 .hint{font-size:12px;color:var(--muted)}
-details.manage{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 16px}
-details.manage summary{cursor:pointer;font-weight:600}
-.mlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:6px 18px;margin:12px 0}
-.mrow{display:flex;justify-content:space-between;gap:8px;font-size:13px;border-bottom:1px dashed var(--line);padding:4px 0}
-.mrow span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cdet{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
-@media (max-width:700px){.cdet{grid-template-columns:1fr}}
+.lrow{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 12px;padding:10px 16px;min-height:56px;position:relative}
+.lrow + .lrow::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:.5px solid var(--line)}
+.lmain{border:0;background:none;padding:0;text-align:left;color:inherit;display:flex;flex-direction:column;min-width:0}
+.lmain::after{content:"";position:absolute;inset:0}
+.lmain .nm{font-weight:600;font-size:16px;line-height:1.3}
+.lmain .sub{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lc{display:none;font-size:14px}
+.lc.today{display:block}
+.lc a{position:relative;z-index:1}
+.lhead{display:none}
+@media (hover:hover){.lrow:not(.lhead):hover{background:var(--fill)}}
+@media (min-width:900px){
+  .lrow{grid-template-columns:var(--cols)}
+  .lc{display:block}
+  .lhead{display:grid;min-height:0;padding-top:9px;padding-bottom:9px;background:var(--sunk);font-size:12px;font-weight:600;color:var(--muted)}
+  .lhead + .lrow::before{display:none}
+}

@@ -6,7 +6,7 @@ import { state } from '../state.js';
 import { times } from '../select.js';
 import { wetTag, courseName, badge } from './ui.js';
 
-export function initSheet(render, { showTimes }) {
+export function initTeeSheet(render, { showTimes }) {
   $('#sheet').addEventListener('click', e => {
     const b = e.target.closest('button.cell'); if (!b) return;
     const s = state.sel;
@@ -15,8 +15,8 @@ export function initSheet(render, { showTimes }) {
   });
 }
 
-export function renderSheet({ sheetCs, dates, minBy }) {
-  const head = `<thead><tr><th>Course</th>${dates.map(d => `<th>${dLabel(d, true)}<small>${dNum(d)}</small></th>`).join('')}</tr></thead>`;
+export function renderTeeSheet({ sheetCs, dates, minBy }) {
+  const head = `<thead><tr><th>Course</th>${dates.map(d => d === nowPT().d ? `<th class="today">Today<small>${dNum(d)}</small></th>` : `<th>${dLabel(d, true)}<small>${dNum(d)}</small></th>`).join('')}</tr></thead>`;
   const body = sheetCs.map(c => {
     const res = state.results[c.id]; const old = !!res && isStale(res);
     return `<tr><th class="course" scope="row">${courseName(c)}<div class="m">${esc(c.city || '')}${badge(res)}</div></th>` +

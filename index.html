@@ -10,6 +10,8 @@
 <link rel="stylesheet" href="styles/tee-sheet.css">
 <link rel="stylesheet" href="styles/ground.css">
 <link rel="stylesheet" href="styles/directory.css">
+<link rel="stylesheet" href="styles/lists.css">
+<link rel="stylesheet" href="styles/sheets.css">
 </head><body>
 
 <nav class="navbar" id="navbar">
@@ -24,6 +26,7 @@
     <div class="status" id="status"><span>Loading…</span></div>
   </header>
 
+  <div class="filterbar" id="filterbar" data-tabs="times direct private"></div>
   <div class="filters" data-tabs="times direct private">
     <div class="field"><label class="label" for="region">Region</label>
       <select id="region"></select></div>
@@ -49,37 +52,40 @@
     <span class="label" id="bestnote"></span>
   </section>
 
-  <div class="detail" id="cdetail" hidden></div>
-
   <section data-tabs="times">
     <div class="sec-h"><h2>Tee sheet</h2>
       <div class="legend"><span><i class="sw" style="background:var(--accent)"></i>Lowest price that day</span><span><i class="sw" style="background:var(--sand)"></i>3 or fewer left</span><span class="wet w-dry"><i></i>Dry</span><span class="wet w-damp"><i></i>Damp</span><span class="wet w-soft"><i></i>Soft</span><span class="wet w-soggy"><i></i>Soggy</span></div></div>
     <div class="card-scroll"><table class="sheet" id="sheet"></table></div>
-    <div class="detail" id="detail" hidden></div>
   </section>
 
   <section data-tabs="direct">
     <span class="label">No readable online tee sheet</span>
     <p class="note">These courses use booking systems the dashboard can't read yet, or need a login to see times. Ground conditions still update every morning.</p>
-    <div class="card-scroll"><table class="dir" id="linkonly"></table></div>
+    <div class="group list" id="linkonly"></div>
   </section>
 
   <section data-tabs="private">
     <span class="label">Members and guests · call the pro shop</span>
     <p class="note">Private clubs don't publish tee times. Use this to see which club is playing driest before you ask your member friend or set up reciprocal play. Tap a club for its drainage notes and rain.</p>
-    <div class="card-scroll"><table class="dir" id="private"></table></div>
+    <div class="group list" id="private"></div>
   </section>
 
   <section data-tabs="about">
-    <p class="note">Drainage scores (1–5) come from golfer reviews and course-construction write-ups; many private and small-town clubs have little public discussion and default to 3 with low confidence. Ground condition combines the score with rain over the three days before and on the day itself. It is an estimate; call ahead after a big storm.</p>
-    <details class="manage">
-      <summary id="ccount">Manage courses</summary>
-      <div class="mlist" id="courses"></div>
-      <p class="note">To add, remove or pause a course, edit <code>data/courses.json</code> in the GitHub repo (<a id="editlink" target="_blank" rel="noopener" href="#">open it on GitHub ↗</a>). A course needs a name, <code>access</code> ("public" or "private"), <code>lat</code>/<code>lon</code>, and for tee times a <code>platform</code> with its <code>params</code>. Set <code>"active": false</code> to pause one. Tee times and rain update every morning at about 6:50 AM Pacific; "Check now" starts one.</p>
-    </details>
+    <div>
+      <div class="group-h">Ground conditions</div>
+      <div class="group"><div class="row stack"><span>Drainage scores (1–5) come from golfer reviews and course-construction write-ups; many private and small-town clubs have little public discussion and default to 3 with low confidence. Ground condition combines the score with rain over the three days before and on the day itself. It is an estimate; call ahead after a big storm.</span></div></div>
+    </div>
+    <div>
+      <div class="group-h" id="ccount">Courses</div>
+      <div class="group" id="courses"></div>
+      <p class="note" style="margin:8px 16px 0">To add, remove or pause a course, edit <code>data/courses.json</code> in the GitHub repo (<a id="editlink" target="_blank" rel="noopener" href="#">open it on GitHub ↗</a>). A course needs a name, <code>access</code> ("public" or "private"), <code>lat</code>/<code>lon</code>, and for tee times a <code>platform</code> with its <code>params</code>. Set <code>"active": false</code> to pause one. Tee times and rain update every morning at about 6:50 AM Pacific; "Check now" starts one.</p>
+    </div>
   </section>
 </div>
 <nav class="tabbar" id="tabbar" aria-label="Sections"></nav>
+<dialog class="sheet" id="filtersheet" aria-labelledby="filtersheet-title"><div class="sheet-grab"></div><div class="sheet-content"><header class="sheet-head"><h2 id="filtersheet-title">Filters</h2><button type="button" class="sheet-done" data-dismiss>Done</button></header><div class="sheet-body" id="filterhost"></div></div></dialog>
+<dialog class="sheet" id="detail" aria-labelledby="detail-title"><div class="sheet-grab"></div><div class="sheet-content"></div></dialog>
+<dialog class="sheet" id="cdetail" aria-labelledby="cdetail-title"><div class="sheet-grab"></div><div class="sheet-content"></div></dialog>
 <div class="toast" id="toast" hidden></div>
 
 <script type="module" src="src/app.js"></script>

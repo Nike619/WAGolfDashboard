@@ -1,0 +1,32 @@
+/* Bottom sheets (<dialog class="sheet">): slide up from the bottom on phones, centered card on wide screens. */
+dialog.sheet{position:fixed;inset:auto 0 0 0;margin:0 auto;width:100%;max-width:640px;max-height:92dvh;padding:0 0 env(safe-area-inset-bottom,0px);border:0;
+  border-radius:14px 14px 0 0;background:var(--sheet);color:var(--ink);box-shadow:0 -10px 40px rgba(0,0,0,.22);overflow:hidden;
+  transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+dialog.sheet[open]{display:flex;flex-direction:column;animation:sheet-up .32s cubic-bezier(.2,.8,.2,1)}
+dialog.sheet.closing{animation:sheet-down .22s ease-in forwards}
+dialog.sheet::backdrop{background:rgba(0,0,0,.4);animation:fade-in .25s ease-out}
+dialog.sheet.closing::backdrop{animation:fade-out .22s ease-in forwards}
+@keyframes sheet-up{from{transform:translateY(100%)}}
+@keyframes sheet-down{to{transform:translateY(100%)}}
+@keyframes fade-in{from{opacity:0}}
+@keyframes fade-out{to{opacity:0}}
+html:has(dialog[open]){overflow:hidden}
+.sheet-grab{flex:none;width:36px;height:5px;border-radius:3px;background:var(--empty);margin:6px auto 0;touch-action:none}
+.sheet-content{display:flex;flex-direction:column;min-height:0;flex:1}
+.sheet-head{flex:none;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:10px 16px 14px;touch-action:none}
+.sheet-head h2{font-size:22px}
+.sheet-done{flex:none;border:0;background:none;color:var(--accent);font-size:17px;font-weight:600;padding:2px 0}
+.sheet-body{overflow-y:auto;overscroll-behavior:contain;padding:0 16px 24px;display:flex;flex-direction:column;gap:18px}
+.sheet .group{background:var(--sheet-card)}
+.sheet .note{font-size:13px;margin:0 4px}
+.bigbtn{display:block;text-align:center;border-radius:12px;padding:13px 16px;background:var(--accent);color:var(--accent-ink);font-weight:600;font-size:17px;text-decoration:none}
+@media (min-width:700px){
+  dialog.sheet{inset:0;margin:auto;max-height:min(84vh,760px);border-radius:14px;padding-bottom:0}
+  dialog.sheet[open]{animation:pop-in .22s cubic-bezier(.2,.8,.2,1)}
+  dialog.sheet.closing{animation:pop-out .18s ease-in forwards}
+  .sheet-grab{display:none}
+  .sheet-head{padding-top:16px}
+}
+@keyframes pop-in{from{transform:scale(.96);opacity:0}}
+@keyframes pop-out{to{transform:scale(.96);opacity:0}}
+@media (prefers-reduced-motion:reduce){dialog.sheet[open],dialog.sheet::backdrop{animation:none}}
