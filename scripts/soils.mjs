@@ -23,10 +23,13 @@ export function circleWkt(lat, lon, r = RADIUS_M) {
 
 const ATTRS = 'mu.muname, ma.drclassdcd AS drainage, ma.hydgrpdcd AS soilgroup, ma.flodfreqdcd AS flood, ma.wtdepannmin AS watertable';
 // Map units inside the circle with the area each covers (geometry area in degrees², fine as a weight).
-export const areaQuery = wkt => `DECLARE @aoi geometry = geometry::STGeomFromText('${wkt}', 4326);
-SELECT a.mukey, a.area, ${ATTRS}
-FROM (SELECT P.mukey, SUM(P.mupolygongeo.STIntersection(@aoi).STArea()) AS area
-      FROM mupolygon AS P WHERE P.mupolygongeo.STIntersects(@aoi) = 1 GROUP BY P.mukey) AS a
+// SDA's helper finds the soil polygons the circle touches; the circle is built in each polygon's own SRID,
+// because a geometry with a different SRID silently intersects nothing.
+export const areaQuery = wkt => `SELECT a.mukey, a.area, ${ATTRS}
+FROM (SELECT P.mukey, SUM(P.mupolygongeo.STIntersection(geometry::STGeomFromText('${wkt}', P.mupolygongeo.STSrid)).STArea()) AS area
+      FROM SDA_Get_Mupolygonkey_from_intersection_with_WktWgs84('${wkt}') AS K
+      JOIN mupolygon AS P ON P.mupolygonkey = K.mupolygonkey
+      GROUP BY P.mukey) AS a
 JOIN mapunit AS mu ON mu.mukey = a.mukey
 LEFT JOIN muaggatt AS ma ON ma.mukey = a.mukey`;
 // Fallback if the area query is refused: the map units the circle touches, weighted equally.
@@ -63,16 +66,16 @@ async function sda(query, tries = 3) {
 // Soil around one course: map units by share of area, plus the drainage score.
 export async function courseSoil(c, query = sda) {
   const wkt = circleWkt(c.lat, c.lon);
-  let method = 'area', rows;
+  let method = 'area', rows, fallback = null;
   try { rows = parseRows(await query(areaQuery(wkt))); }
-  catch (e) { console.log(`  area query failed for ${c.id} (${String(e.message).slice(0, 160)}); using touch query`); rows = null; }
+  catch (e) { fallback = String(e.message).slice(0, 300); console.log(`  area query failed for ${c.id} (${fallback.slice(0, 160)}); using touch query`); rows = null; }
   // No rows can also mean the spatial match didn't work (e.g. a coordinate-system mismatch), so try the other query.
-  if (!rows?.length) { method = 'touch'; rows = parseRows(await query(touchQuery(wkt))); }
+  if (!rows?.length) { method = 'touch'; fallback ??= 'area query returned no rows'; rows = parseRows(await query(touchQuery(wkt))); }
   const units = rows.map(toUnit).filter(u => u.area > 0);
   const { score, coverage } = siteScore(units);
   const total = units.reduce((a, u) => a + u.area, 0) || 1;
   return {
-    score, coverage, method,
+    score, coverage, method, ...(fallback ? { fallback } : {}),
     units: units.sort((a, b) => b.area - a.area).slice(0, 4).map(({ area, ...u }) => ({ ...u, share: Math.round(area / total * 100) / 100 })),
   };
 }
@@ -96,6 +99,10 @@ async function main() {
     const diff = check.reduce((a, c) => a + Math.abs(c.drainage.score - out.courses[c.id].score), 0) / check.length;
     console.log(`  mean absolute difference: ${diff.toFixed(2)} over ${check.length} courses`);
   }
+  // Why any course fell back to the unweighted query, readable in the data file without the Actions log.
+  const fell = Object.values(out.courses).filter(s => s.fallback);
+  if (fell.length) out.fallbacks = { count: fell.length, first: fell[0].fallback };
+  for (const s of fell) delete s.fallback;
   if (failed === courses.length) { console.error('Every soil query failed; data/soils.json not written.'); process.exit(1); }
   await fs.writeFile(path.join(DATA, 'soils.json'), JSON.stringify(out) + '\n');
   console.log(`\nWrote soils for ${Object.keys(out.courses).length} of ${courses.length} courses (${failed} failed).`);

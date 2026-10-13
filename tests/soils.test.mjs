@@ -22,12 +22,14 @@ assert.equal(s.coverage, 0.75);
 assert.deepEqual(s.units.map(u => [u.name, u.share]), [['Everett gravelly sandy loam', 0.75], ['Urban land', 0.25]]);
 // Area query refused: falls back to the touch query.
 const asked = [];
-s = await courseSoil(course, async q => { asked.push(q.includes('STIntersects') ? 'area' : 'touch'); if (q.includes('STIntersects')) throw new Error('HTTP 500: bad'); return T(['3', '1', 'Puyallup', 'Poorly drained', 'B/D', 'Frequent', '20']); });
+s = await courseSoil(course, async q => { asked.push(q.includes('mupolygonkey') ? 'area' : 'touch'); if (q.includes('mupolygonkey')) throw new Error('HTTP 500: bad'); return T(['3', '1', 'Puyallup', 'Poorly drained', 'B/D', 'Frequent', '20']); });
 assert.deepEqual(asked, ['area', 'touch']);
 assert.equal(s.method, 'touch');
 assert.equal(s.score, 1, 'floodplain with a high water table');
+assert.equal(s.fallback, 'HTTP 500: bad', 'records why it fell back');
 // Area query matches nothing: also falls back.
-s = await courseSoil(course, async q => q.includes('STIntersects') ? {} : T(['4', '1', 'Alderwood', 'Moderately well drained', 'B', 'None', '60']));
+s = await courseSoil(course, async q => q.includes('mupolygonkey') ? {} : T(['4', '1', 'Alderwood', 'Moderately well drained', 'B', 'None', '60']));
 assert.equal(s.method, 'touch');
 assert.equal(s.score, 3.5);
+assert.equal(s.fallback, 'area query returned no rows');
 console.log('Soil script tests passed.');
