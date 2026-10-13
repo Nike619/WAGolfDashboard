@@ -14,6 +14,7 @@ import { renderPrivateClubs } from './views/privateClubs.js';
 import { renderTimeDetail } from './views/timeDetail.js';
 import { renderCourseDetail } from './views/courseDetail.js';
 import { renderManage } from './views/manage.js';
+import { initMap, renderMap } from './views/map.js';
 
 function render() {
   pref.access = pref.tab === 'private' ? 'private' : 'public';
@@ -31,6 +32,7 @@ function render() {
   renderTimeDetail(priv);
   renderCourseDetail();
   renderManage();
+  renderMap();
 }
 
 const actions = {
@@ -50,6 +52,7 @@ initTabs(render);
 initFilters(render);
 initBest(render, actions);
 initTeeSheet(render, actions);
+initMap(actions);
 window.addEventListener('hashchange', () => { readHash(); state.sel = null; render(); });
 writeHash();
 

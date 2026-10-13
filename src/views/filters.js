@@ -44,5 +44,5 @@ export function renderFilters() {
   $('#filterbar').innerHTML = `<button type="button" class="chip icon" aria-label="Filters">${ICON}</button>` +
     chip(pref.region || 'All of Washington', !!pref.region) +
     (times ? chip(`${pref.players} ${pref.players === 1 ? 'player' : 'players'}`, pref.players !== 2) + chip(WIN[pref.win], pref.win !== 'any') + chip(pref.maxp ? `Up to $${pref.maxp}` : 'Any price', !!pref.maxp) : '') +
-    chip(SORT[pref.sort], pref.sort !== 'rank');
+    (pref.tab === 'map' ? '' : chip(SORT[pref.sort], pref.sort !== 'rank'));
 }

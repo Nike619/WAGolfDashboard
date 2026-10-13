@@ -19,6 +19,7 @@
 <link rel="stylesheet" href="styles/directory.css">
 <link rel="stylesheet" href="styles/lists.css">
 <link rel="stylesheet" href="styles/sheets.css">
+<link rel="stylesheet" href="styles/map.css">
 </head><body>
 
 <nav class="navbar" id="navbar">
@@ -33,11 +34,11 @@
     <div class="status" id="status"><span>Loading…</span></div>
   </header>
 
-  <div class="filterbar" id="filterbar" data-tabs="times direct private"></div>
-  <div class="filters" data-tabs="times direct private">
+  <div class="filterbar" id="filterbar" data-tabs="times map direct private"></div>
+  <div class="filters" data-tabs="times map direct private">
     <div class="field"><label class="label" for="region">Region</label>
       <select id="region"></select></div>
-    <div class="field"><label class="label" for="sort">Sort</label>
+    <div class="field" data-tabs="times direct private"><label class="label" for="sort">Sort</label>
       <select id="sort"><option value="rank">Ranking</option><option value="dry">Driest today</option><option value="price" data-tabs="times">Cheapest this week</option></select></div>
     <div class="field" data-tabs="times"><span class="label">Players</span>
       <div class="seg" id="players" role="group" aria-label="Players">
@@ -49,7 +50,7 @@
       </div></div>
     <div class="field" data-tabs="times"><label class="label" for="maxp">Max per player</label>
       <select id="maxp"></select></div>
-    <button type="button" class="linkbtn" id="share" style="padding-bottom:7px">Copy link to this view</button>
+    <button type="button" class="linkbtn" id="share" data-tabs="times direct private" style="padding-bottom:7px">Copy link to this view</button>
   </div>
 
   <section data-tabs="times private">
@@ -63,6 +64,15 @@
     <div class="sec-h"><h2>Tee sheet</h2>
       <div class="legend"><span><i class="sw" style="background:var(--accent)"></i>Lowest price that day</span><span><i class="sw" style="background:var(--sand)"></i>3 or fewer left</span><span class="wet w-dry"><i></i>Dry</span><span class="wet w-damp"><i></i>Damp</span><span class="wet w-soft"><i></i>Soft</span><span class="wet w-soggy"><i></i>Soggy</span></div></div>
     <div class="card-scroll"><table class="sheet" id="sheet"></table></div>
+  </section>
+
+  <section data-tabs="map">
+    <div class="mapwrap">
+      <div id="map" role="application" aria-label="Map of courses and rain radar"></div>
+      <div class="seg map-show" id="mapshow" role="group" aria-label="Courses on the map"><button type="button" data-v="public">Public</button><button type="button" data-v="private">Private</button><button type="button" data-v="all">All</button></div>
+      <div class="map-ctrl"><button type="button" id="radarplay" aria-pressed="false" aria-label="Play the last 50 minutes of radar"><svg viewBox="0 0 20 20" aria-hidden="true"><path class="play" d="M6 4.5v11l9-5.5z"/><path class="pause" d="M6 4.5h3v11H6zM11 4.5h3v11h-3z"/></svg></button><span id="radartime">Radar</span></div>
+    </div>
+    <div class="legend"><span class="wet w-dry"><i></i>Dry</span><span class="wet w-damp"><i></i>Damp</span><span class="wet w-soft"><i></i>Soft</span><span class="wet w-soggy"><i></i>Soggy</span><span>Ground today · dots are public courses, rings are private clubs · tap one for details</span></div>
   </section>
 
   <section data-tabs="direct">

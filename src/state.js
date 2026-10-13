@@ -4,7 +4,7 @@ import { REGIONS, MAX_PRICES, TABS } from './config.js';
 export const state = { courses: [], results: {}, weather: {}, run: null, sel: null, csel: null, loaded: false };
 
 // access is derived from tab in render(); it's kept here because the course filters read it.
-export const pref = { tab: 'times', win: 'any', maxp: 0, best: 'dry', access: 'public', region: '', sort: 'rank', players: 2 };
+export const pref = { tab: 'times', mapshow: 'public', win: 'any', maxp: 0, best: 'dry', access: 'public', region: '', sort: 'rank', players: 2 };
 const DEF = { ...pref };
 try {
   const saved = JSON.parse(localStorage.getItem('teeprefs') || '{}');
@@ -14,7 +14,7 @@ try {
 
 // Filters also live in the URL hash (#players=4&region=South+Sound) so a view can be shared; a link's filters win over saved ones.
 const HASH = {
-  tab: TABS, region: ['', ...REGIONS], sort: ['rank', 'dry', 'price'], players: ['1', '2', '3', '4'],
+  tab: TABS, mapshow: ['public', 'private', 'all'], region: ['', ...REGIONS], sort: ['rank', 'dry', 'price'], players: ['1', '2', '3', '4'],
   win: ['any', 'am', 'mid', 'pm'], maxp: ['0', ...MAX_PRICES.map(String)], best: ['dry', 'price'],
 };
 export function readHash() {

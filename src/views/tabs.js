@@ -1,16 +1,18 @@
-// Tab bar (Tee Times · Book Direct · Private · About), the large title, and which sections each tab shows.
+// Tab bar (Tee Times · Map · Book Direct · Private · About), the large title, and which sections each tab shows.
 // Elements with data-tabs="times private" are shown only on those tabs.
 import { $, $$ } from '../lib/dom.js';
 import { state, pref, savePref } from '../state.js';
 
 const ICONS = {
   times: '<path d="M7 21V3.5"/><path d="M7 4l10 3.6L7 11.2"/><path d="M3.5 21h7"/>',
+  map: '<path d="M9 4.5 3.5 6.6v13l5.5-2.1 6 2.1 5.5-2.1v-13L15 6.6z"/><path d="M9 4.5v13M15 6.6v13"/>',
   direct: '<path d="M6.6 3.5h2.8l1.6 4.3-2.1 1.4a11.5 11.5 0 0 0 5.9 5.9l1.4-2.1 4.3 1.6v2.8a2 2 0 0 1-2.2 2A16.5 16.5 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2z"/>',
   private: '<rect x="5" y="10.5" width="14" height="10" rx="2.2"/><path d="M8.2 10.5V7.8a3.8 3.8 0 0 1 7.6 0v2.7"/>',
   about: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><path d="M12 7.6v.1"/>',
 };
 const TAB_INFO = {
   times: { label: 'Tee Times', title: 'Tee Times' },
+  map: { label: 'Map', title: 'Map' },
   direct: { label: 'Book Direct', title: 'Book Direct' },
   private: { label: 'Private', title: 'Private Clubs' },
   about: { label: 'About', title: 'About' },

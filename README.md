@@ -56,6 +56,7 @@ Finding a course's booking IDs and researching how it drains takes some digging.
 - If a booking site stops responding, that course is marked **Check failed** and keeps its last good times. The other courses still update, and the run shows as **Partly updated**.
 - Times more than 12 hours old get a **Times from … ago** badge, and a course that shows no open times all week gets a **No times all week** badge, since that often means its booking site changed.
 - `.github/workflows/update.yml` runs the script, commits the new data, and publishes the site.
+- The **Map** tab shows every course colored by today's ground condition over live NWS radar (via Iowa Environmental Mesonet), on OpenFreeMap tiles. Press play to loop the last 50 minutes of radar.
 - `index.html`, `styles/` and `src/` are the page: plain JavaScript modules and CSS with no build step. It loads the JSON files from `data/`, and filters for players, time of day, price and region right in the browser.
 
 ## Ground-condition model

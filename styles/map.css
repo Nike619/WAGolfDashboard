@@ -1,0 +1,26 @@
+/* Map tab: MapLibre map with radar, floating controls, MapLibre's controls restyled to match. */
+.mapwrap{position:relative;border-radius:var(--radius);overflow:hidden;background:var(--sunk)}
+#map{height:min(70vh,720px);min-height:360px;background:var(--sunk)}
+@media (max-width:699px){
+  .mapwrap{margin:0 -16px;border-radius:0}
+  #map{height:calc(100dvh - 300px - env(safe-area-inset-bottom,0px));min-height:340px}
+}
+.map-err{padding:24px;text-align:center}
+.map-ctrl{position:absolute;z-index:2;left:10px;bottom:22px;display:flex;align-items:center;gap:8px;padding:4px 12px 4px 4px;border-radius:99px;
+  background:var(--material);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);box-shadow:0 2px 10px rgba(0,0,0,.15);font-size:13px;font-weight:600}
+#radarplay{width:30px;height:30px;border:0;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;padding:0}
+#radarplay svg{width:14px;height:14px;fill:currentColor}
+#radarplay .pause,#radarplay[aria-pressed="true"] .play{display:none}
+#radarplay[aria-pressed="true"] .pause{display:inline}
+/* Public / Private / All switch, floating over the map */
+.map-show{position:absolute;z-index:2;left:10px;top:10px;background:var(--material);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);box-shadow:0 2px 10px rgba(0,0,0,.15)}
+/* MapLibre controls and course tooltips in the app's style */
+.maplibregl-map{font:inherit}
+.maplibregl-ctrl-group{border-radius:10px!important;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.15)!important;background:var(--material)!important;-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px)}
+.maplibregl-ctrl-group button+button{border-top-color:var(--line)!important}
+@media (prefers-color-scheme:dark){.maplibregl-ctrl-group button .maplibregl-ctrl-icon{filter:invert(1)}}
+.maplibregl-ctrl-attrib{font-size:10px}
+.maplibregl-ctrl-bottom-right{margin-bottom:2px}
+.course-tip .maplibregl-popup-content{background:var(--surface);color:var(--ink);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.18);font-size:13px;padding:6px 10px}
+.course-tip.maplibregl-popup-anchor-bottom .maplibregl-popup-tip{border-top-color:var(--surface)}
+.course-tip.maplibregl-popup-anchor-top .maplibregl-popup-tip{border-bottom-color:var(--surface)}
