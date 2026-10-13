@@ -4,6 +4,7 @@ import { initSheet } from './lib/sheets.js';
 import { state, pref, readHash, writeHash } from './state.js';
 import { dates as dateRange, inView, sorted, cheapestByDay } from './select.js';
 import { isPub, hasTimes } from './model/courses.js';
+import { withSoil } from './model/soil.js';
 import { renderStatus, showLoadError } from './views/status.js';
 import { initTabs, renderTabs } from './views/tabs.js';
 import { initFilters, renderFilters } from './views/filters.js';
@@ -67,8 +68,9 @@ async function load() {
   const bust = '?t=' + Math.floor(Date.now() / 60000);
   const get = f => fetch('data/' + f + bust).then(r => { if (!r.ok) throw new Error(f + ' ' + r.status); return r.json(); });
   try {
-    const [c, r, w, m] = await Promise.all([get('courses.json'), get('results.json'), get('weather.json'), get('meta.json')]);
-    state.courses = c.map(x => ({ status: 'ready', ...x })); state.results = r; state.weather = w; state.run = m; state.loaded = true; render();
+    // soils.json comes from a separate, occasional workflow; the page works without it.
+    const [c, r, w, m, s] = await Promise.all([get('courses.json'), get('results.json'), get('weather.json'), get('meta.json'), get('soils.json').catch(() => ({}))]);
+    state.courses = c.map(x => withSoil({ status: 'ready', ...x }, s.courses?.[x.id])); state.results = r; state.weather = w; state.run = m; state.loaded = true; render();
   } catch (e) { showLoadError(); }
 }
 render();

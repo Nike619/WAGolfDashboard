@@ -37,7 +37,7 @@ jobs:
         run: |
           fetch=true
           if [ "${{ github.event_name }}" = "push" ] && git fetch --depth=1 origin "${{ github.event.before }}" 2>/dev/null; then
-            git diff --name-only "${{ github.event.before }}" HEAD | grep -qE '^(data/courses\.json|scripts/|\.github/workflows/update\.yml)' || fetch=false
+            git diff --name-only "${{ github.event.before }}" HEAD | grep -qE '^(data/courses\.json|scripts/fetch\.mjs|\.github/workflows/update\.yml)' || fetch=false
           fi
           echo "fetch=$fetch" >> "$GITHUB_OUTPUT"
           echo "Check courses: $fetch"

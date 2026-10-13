@@ -75,3 +75,29 @@ const late = { days: { '2026-10-12': '1700,30,4;1820,30,4;2000,30,4;2220,30,4' }
 assert.deepEqual(openTimes(late, '2026-10-12', all, { d: '', t: '' }, '18:26').map(x => x.t), ['17:00', '18:20'], 'times after sunset are dropped');
 assert.equal(openTimes(late, '2026-10-12', all, { d: '', t: '' }).length, 4, 'no sunset given: keep all');
 console.log('Sunset tests passed.');
+
+// ---------- soil ----------
+import { unitScore, siteScore, withSoil } from '../src/model/soil.js';
+assert.equal(unitScore({ drainage: 'Excessively drained', group: 'A' }), 5);
+assert.equal(unitScore({ drainage: 'Well drained', group: 'B' }), 4);
+assert.equal(unitScore({ drainage: 'Poorly drained', group: 'D', flood: 'Frequent' }), 1, 'floodplain clay bottoms out');
+assert.equal(unitScore({ drainage: 'Moderately well drained', group: 'C', watertable: 45 }), 2.25, 'shallow water table costs half a point');
+assert.equal(unitScore({ drainage: 'Somewhat poorly drained', group: 'A/D' }), 3.25, 'dual group uses the drained letter, half a point lower');
+assert.equal(unitScore({ group: 'B' }), 4, 'group alone');
+assert.equal(unitScore({ drainage: null, group: null }), null, 'Urban land has no rating');
+assert.deepEqual(siteScore([{ area: 3, drainage: 'Well drained', group: 'A' }, { area: 1, drainage: 'Poorly drained', group: 'D' }]), { score: 3.7, coverage: 1 }, 'area-weighted: (3 × 4.5 + 1 × 1.25) / 4');
+assert.deepEqual(siteScore([{ area: 1, drainage: 'Well drained', group: 'B' }, { area: 3 }]), { score: null, coverage: 0.25 }, 'mostly unrated: no score');
+assert.deepEqual(siteScore([]), { score: null, coverage: 0 });
+
+const research = { id: 'a', drainage: { score: 5, confidence: 'high', sources: [{}] } };
+assert.equal(withSoil(research, { score: 2 }).drainage.score, 5, 'researched score wins');
+assert.equal(withSoil(research, { score: 2 }).drainage.basis, 'research');
+const unknown = { id: 'b', drainage: { score: 3, confidence: 'low', sources: [] } };
+assert.equal(withSoil(unknown, { score: 4.6 }).drainage.score, 5, 'default 3 replaced by soil');
+assert.equal(withSoil(unknown, { score: 4.6 }).drainage.basis, 'soil');
+assert.equal(withSoil(unknown, { score: 4.6 }).drainage.researched, 3);
+const weak = { id: 'c', drainage: { score: 2, confidence: 'low', sources: [{}] } };
+assert.equal(withSoil(weak, { score: 4 }).drainage.score, 3, 'low confidence with sources: averaged');
+assert.equal(withSoil(unknown, { score: null }).drainage.score, 3, 'no soil score: unchanged');
+assert.equal(withSoil(unknown, undefined), unknown, 'no soil data: same object');
+console.log('Soil tests passed.');

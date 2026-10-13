@@ -1,0 +1,52 @@
+name: Update soil data
+
+# Soils don't change, so this runs by hand ("Run workflow") or when the soil script changes.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['scripts/soils.mjs', 'src/model/soil.js', '.github/workflows/soils.yml']
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: soils
+  cancel-in-progress: false
+
+jobs:
+  soils:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Read soils from the USDA soil survey
+        run: node scripts/soils.mjs
+
+      - name: Save data to the repo
+        run: |
+          git config user.name "tee-sheet-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/soils.json
+          git diff --cached --quiet || git commit -m "Update soil data $(date -u +%Y-%m-%d)"
+          git pull --rebase -X theirs origin main
+          git push
+
+      # Commits made by a workflow don't start other workflows, so publish the new data here.
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - id: deploy
+        uses: actions/deploy-pages@v4

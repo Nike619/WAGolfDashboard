@@ -14,6 +14,7 @@ scripts/fetch.mjs              Node 20, no dependencies
 data/results.json              tee times per course and date (compact strings)
 data/weather.json              rain per course: 3 days back + 7 forecast (Open-Meteo)
 data/meta.json                 last run status, shown in the page header
+data/soils.json                native soil per course (USDA SSURGO), from .github/workflows/soils.yml
         │ read by
 index.html + styles/ + src/    the site (no build step; served as-is)
 ```
@@ -56,6 +57,8 @@ src/app.js          load data/*.json, render() calls every view, shared actions 
 ## Commands
 
 - `node tests/fetch.test.mjs`: offline test with mocked responses for all five booking platforms, using its own sample courses (not `data/courses.json`). Run it after any change to `scripts/fetch.mjs`. When you add a platform, add a mock and an assertion for it.
+- `node tests/soils.test.mjs`: offline test for `scripts/soils.mjs` (mocked Soil Data Access answers).
+- `node scripts/soils.mjs`: real soil queries for every course (~2 minutes); writes `data/soils.json`. Normally run by the soils workflow instead.
 - `node tests/model.test.mjs`: tests the page's pure logic in `src/model/` (tee-time filtering, ground conditions). Run it after changing anything there.
 - After changing `src/`, run `for f in $(find src -name '*.js'); do node --check "$f"; done` to catch syntax errors, then preview the page and check both themes, phone width and 900px+. `node --check` misses runtime errors, so after a **full reload** click through: each tab, a tee-sheet cell (sheet opens), Course details from it, a course name in a list, and the filter chips at phone width. Read the console for errors after the reload.
 - `node scripts/fetch.mjs`: real run against the live sites. It overwrites `data/results.json`, `data/weather.json` and `data/meta.json`, so don't commit those from a local run unless you mean to. It takes 10+ minutes because of rate-limit pacing.
@@ -95,10 +98,12 @@ Systems we can't read yet: EZLinks (Chambers Bay, Suncadia), Agilysys (Gamble Sa
 
 ## Drainage and ground conditions
 
-- `drainage = { score, confidence, summary, sources: [{label, url}] }`.
+- `drainage = { score, confidence, summary, sources: [{label, url}] }` in `courses.json` is the researched score; the page may adjust low-confidence scores with soil data (below).
 - `score` runs 1–5: 5 means firm soon after heavy rain (sand-capped, quarry/gravel sites like The Home Course and Chambers Bay); 1 means soggy for days (floodplain, clay).
 - Research from golfer reviews and write-ups: Reddit, GolfWRX, GolfPass, Greenskeeper, TripAdvisor, Cascade Golfer's "High & Dry" winter-course articles, Northwest Links, local news, and course construction history.
 - Never invent evidence. If little is found, use `score: 3`, `confidence: "low"`, summary "Little golfer discussion of drainage found.", `sources: []`. Paraphrase; no long quotes. Only cite URLs actually read. Club-website claims are weak evidence; say so in the summary.
+- **Soil data.** `.github/workflows/soils.yml` (run by hand, or on changes to `scripts/soils.mjs`, `src/model/soil.js` or the workflow) runs `scripts/soils.mjs`. It asks USDA Soil Data Access for the map units inside a 400 m circle around each course, weighted by area (falling back to an unweighted query if the spatial one fails or matches nothing), reads `muaggatt` (drainage class, hydrologic soil group, flooding, shallowest water table), scores each 1–5 with `src/model/soil.js`, commits `data/soils.json` and redeploys. Its log prints researched vs soil scores for high/medium-confidence courses; check that before trusting soil for the rest.
+- **How soil feeds the score** (`withSoil()` in `src/model/soil.js`, applied when the page loads): high/medium-confidence researched scores are kept; low confidence with sources is averaged with soil; low confidence without sources (the default 3) is replaced by soil. `drainage.basis` records which (`research`, `blend`, `soil`), and the course sheet says so. SSURGO is the native soil before construction, so it can't see sand caps, USGA greens or drain tile; golfer reports win.
 - The ground label is computed in `src/model/ground.js` (`wetness()`). The wetness index is `(rain that day + rain 1 day before + 0.6 × 2 days before + 0.35 × 3 days before) × retention`. Retention by score: 5→0.15, 4→0.35, 3→0.6, 2→0.85, 1→1.0. Labels: below 0.08 is Dry, below 0.25 is Damp, below 0.5 is Soft, otherwise Soggy. "Driest course each day" picks the lowest index among courses with matching open times (for private courses, among all clubs in view).
 
 ## Conventions

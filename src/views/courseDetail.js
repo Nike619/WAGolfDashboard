@@ -7,6 +7,21 @@ import { state } from '../state.js';
 import { rainOn, rainPct, chance, bookLinkFor } from '../select.js';
 import { wetTag, meter } from './ui.js';
 
+// Where the drainage score came from.
+function basis(dr) {
+  if (dr.basis === 'soil') return 'From the USDA soil survey; no golfer reports found';
+  if (dr.basis === 'blend') return `Golfer reports (${dr.researched}/5) averaged with the soil survey`;
+  return dr.confidence ? `${dr.confidence[0].toUpperCase() + dr.confidence.slice(1)} confidence, from golfer reports` : '';
+}
+
+// Native soil around the course (USDA SSURGO), largest map units first.
+function soilRows(soil) {
+  if (!soil?.units?.length) return '';
+  const desc = u => [u.drainage, u.group && 'group ' + u.group, u.flood && !/none/i.test(u.flood) && 'floods ' + u.flood.toLowerCase()].filter(Boolean).join(' · ') || 'Not rated';
+  return soil.units.filter(u => u.share >= 0.1).map(u => `<div class="row"><span class="grow">${esc(u.name)}<span class="sub">${esc(desc(u))}</span></span><span class="val">${Math.round(u.share * 100)}%</span></div>`).join('') +
+    `<a class="row chev" href="https://websoilsurvey.nrcs.usda.gov/" target="_blank" rel="noopener"><span class="grow">Native soil, before the course was built<span class="sub">USDA soil survey${soil.score != null ? ` · ${soil.score} of 5 on its own` : ''}</span></span></a>`;
+}
+
 export function renderCourseDetail() {
   const dlg = $('#cdetail'); const c = state.csel && state.courses.find(x => x.id === state.csel);
   if (!c) { hideSheet(dlg); return; }
@@ -32,9 +47,10 @@ export function renderCourseDetail() {
       <div>
         <div class="group-h">Drainage</div>
         <div class="group">
-          <div class="row"><span class="grow">${dr.score ? dr.score + ' of 5' : 'Unrated'}${dr.confidence ? `<span class="sub">${esc(dr.confidence)} confidence</span>` : ''}</span>${meter(dr.score)}</div>
-          <div class="row stack"><span>${esc(dr.summary || 'No drainage notes yet.')}</span>
-            ${(dr.sources || []).length ? `<div class="src">${dr.sources.map(s => `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.label)}</a>`).join('')}</div>` : ''}</div>
+          <div class="row"><span class="grow">${dr.score ? dr.score + ' of 5' : 'Unrated'}<span class="sub">${esc(basis(dr))}</span></span>${meter(dr.score)}</div>
+          ${dr.basis === 'soil' ? '' : `<div class="row stack"><span>${esc(dr.summary || 'No drainage notes yet.')}</span>
+            ${(dr.sources || []).length ? `<div class="src">${dr.sources.map(s => `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.label)}</a>`).join('')}</div>` : ''}</div>`}
+          ${soilRows(c.soil)}
         </div>
       </div>
       ${contact ? `<div class="group">${contact}</div>` : ''}
