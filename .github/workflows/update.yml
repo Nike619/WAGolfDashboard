@@ -7,7 +7,7 @@ on:
   workflow_dispatch:        # "Run workflow" button = check now
   push:
     branches: [main]
-    paths: ['data/courses.json', 'index.html', 'scripts/**', '.github/workflows/update.yml']
+    paths: ['data/courses.json', 'index.html', 'src/**', 'styles/**', 'scripts/**', '.github/workflows/update.yml']
 
 permissions:
   contents: write
@@ -31,7 +31,7 @@ jobs:
         with:
           node-version: 20
 
-      # A push that only changes the page (index.html) just redeploys; it doesn't spend the booking sites' rate limits.
+      # A push that only changes the page (index.html, src/, styles/) just redeploys; it doesn't spend the booking sites' rate limits.
       - name: Decide whether to check courses
         id: scope
         run: |

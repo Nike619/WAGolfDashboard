@@ -1,0 +1,5 @@
+{
+  "private": true,
+  "type": "module",
+  "description": "No dependencies. This file only tells Node that src/**/*.js are ES modules, so tests can import them."
+}

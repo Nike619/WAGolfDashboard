@@ -1,0 +1,18 @@
+/* Ground condition tags, drainage meter, rain chart. */
+.wet{font-size:11px;letter-spacing:.04em;text-transform:uppercase;font-weight:600;display:inline-flex;align-items:center;gap:4px}
+.wet i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.w-dry{color:var(--accent)} .w-dry i{background:var(--accent)}
+.w-damp{color:var(--muted)} .w-damp i{background:var(--muted)}
+.w-soft{color:var(--sand)} .w-soft i{background:var(--sand)}
+.w-soggy{color:var(--warn)} .w-soggy i{background:var(--warn)}
+.cell[aria-pressed="true"] .wet{color:var(--accent-ink)} .cell[aria-pressed="true"] .wet i{background:var(--accent-ink)}
+.meter{display:flex;gap:3px}
+.meter span{width:16px;height:8px;border-radius:2px;background:var(--sunk)}
+.meter span.on{background:var(--accent)}
+.rainrow{display:flex;gap:4px;align-items:flex-end;height:58px}
+.rainrow small.pct{color:#5B84A6;min-height:1.2em}
+.rainrow div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;height:100%}
+.rainrow b{display:block;width:100%;max-width:18px;background:#5B84A6;border-radius:2px 2px 0 0;min-height:1px}
+.rainrow b.fc{background:transparent;border:1px dashed #5B84A6;border-bottom:0}
+.rainrow small{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.src{font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 10px}

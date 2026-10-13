@@ -5,7 +5,7 @@ A GitHub Pages dashboard of open tee times and ground conditions for Washington 
 ## Set up (about 5 minutes)
 
 1. **Create a repo.** On github.com, click **New repository** and name it something like `tee-sheet`. Make it **Public**: GitHub Pages on a free plan needs a public repo.
-2. **Upload the files.** On the new repo page, click **uploading an existing file**. Drag in everything from this folder: `index.html`, `README.md`, and the `data` and `scripts` folders. Then click **Commit changes**.
+2. **Upload the files.** On the new repo page, click **uploading an existing file**. Drag in everything from this folder: `index.html`, `README.md`, `package.json`, and the `data`, `scripts`, `src`, `styles` and `tests` folders. Then click **Commit changes**.
 3. **Add the workflow file.** macOS Finder hides folders whose names start with a dot, so the `.github` folder usually gets left out when you drag files in. Add it by hand:
    - Click **Add file → Create new file**.
    - Type the name `.github/workflows/update.yml`. The slashes create the folders.
@@ -54,7 +54,7 @@ Finding a course's booking IDs and researching how it drains takes some digging.
 - If a booking site stops responding, that course is marked **Check failed** and keeps its last good times. The other courses still update, and the run shows as **Partly updated**.
 - Times more than 12 hours old get a **Times from … ago** badge, and a course that shows no open times all week gets a **No times all week** badge, since that often means its booking site changed.
 - `.github/workflows/update.yml` runs the script, commits the new data, and publishes the site.
-- `index.html` is the whole page. It loads the JSON files from `data/`, and filters for players, time of day, price and region right in the browser.
+- `index.html`, `styles/` and `src/` are the page: plain JavaScript modules and CSS with no build step. It loads the JSON files from `data/`, and filters for players, time of day, price and region right in the browser.
 
 ## Ground-condition model
 

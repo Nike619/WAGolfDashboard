@@ -1,0 +1,19 @@
+/* Book-directly and private-club tables, course names, manage list, course detail layout. */
+.rank{font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 5px;margin-right:6px;vertical-align:1px}
+.course .n button,.dir .n button{border:0;background:none;padding:0;font:inherit;font-weight:600;text-align:left;color:var(--ink);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.course .n button:hover,.dir .n button:hover{text-decoration-color:var(--accent)}
+table.dir{border-collapse:collapse;width:100%;min-width:760px;font-size:14px}
+.dir th,.dir td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.dir thead th{background:var(--sunk);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.dir tbody tr:last-child td{border-bottom:0}
+.dir .m{font-size:12px;color:var(--muted)}
+.dir td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.phone{font-family:var(--mono);font-size:13px;user-select:all;white-space:nowrap}
+.hint{font-size:12px;color:var(--muted)}
+details.manage{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 16px}
+details.manage summary{cursor:pointer;font-weight:600}
+.mlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:6px 18px;margin:12px 0}
+.mrow{display:flex;justify-content:space-between;gap:8px;font-size:13px;border-bottom:1px dashed var(--line);padding:4px 0}
+.mrow span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cdet{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:700px){.cdet{grid-template-columns:1fr}}

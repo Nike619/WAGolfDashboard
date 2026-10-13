@@ -1,0 +1,15 @@
+/* Colors, fonts and dark mode. Every other stylesheet uses these variables. */
+:root{
+  --bg:#F3F5F0; --surface:#FFFFFF; --sunk:#E9EDE5; --ink:#18201B; --muted:#5F6B63; --line:#D6DDD2;
+  --accent:#1E5B3A; --accent-ink:#FFFFFF; --accent-soft:#DCEBDF; --sand:#B8893A; --sand-soft:#F4E9D2;
+  --warn:#A4461F; --warn-soft:#F6E1D6; --empty:#9AA39C;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"IBM Plex Sans",-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;--bg:#111612;--surface:#182019;--sunk:#0D110E;--ink:#E6ECE5;--muted:#98A59B;--line:#2A342C;
+  --accent:#6FC08F;--accent-ink:#0C1A11;--accent-soft:#1D3526;--sand:#D9B065;--sand-soft:#33291A;--warn:#E48A63;--warn-soft:#3A2219;--empty:#5D685F;}}
+:root[data-theme="dark"]{
+  color-scheme:dark;--bg:#111612;--surface:#182019;--sunk:#0D110E;--ink:#E6ECE5;--muted:#98A59B;--line:#2A342C;
+  --accent:#6FC08F;--accent-ink:#0C1A11;--accent-soft:#1D3526;--sand:#D9B065;--sand-soft:#33291A;--warn:#E48A63;--warn-soft:#3A2219;--empty:#5D685F;}

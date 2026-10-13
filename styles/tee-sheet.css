@@ -1,0 +1,42 @@
+/* Best-day strip, the tee sheet grid, and the tee-time detail panel. */
+.best{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.bday{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;text-align:left}
+.bday:hover{border-color:var(--accent)}
+.bday .d{font-family:var(--display);font-weight:600;font-size:17px;text-transform:uppercase;letter-spacing:.03em}
+.bday .p{font-family:var(--mono);font-size:20px;color:var(--accent);font-weight:500}
+.bday .c{font-size:12px;color:var(--muted);line-height:1.35}
+.bday.none .p{color:var(--empty)}
+.card-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+table.sheet{border-collapse:collapse;width:100%;min-width:760px}
+.sheet th,.sheet td{border-bottom:1px solid var(--line);padding:0}
+.sheet thead th{font-family:var(--display);font-weight:600;font-size:15px;text-transform:uppercase;letter-spacing:.04em;padding:10px 8px;text-align:center;background:var(--sunk);border-left:1px solid var(--line)}
+.sheet thead th:first-child{text-align:left;padding-left:14px;border-left:0}
+.sheet thead th small{display:block;font-family:var(--mono);font-weight:400;font-size:11px;color:var(--muted);letter-spacing:0}
+.sheet tbody tr:last-child td,.sheet tbody tr:last-child th{border-bottom:0}
+.sheet .course{padding:12px 14px;text-align:left;min-width:190px;vertical-align:top}
+.course .n{font-weight:600}
+.course .m{font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:2px}
+.sheet td{border-left:1px solid var(--line);text-align:center;vertical-align:middle}
+.cell{width:100%;min-height:62px;border:0;background:none;padding:8px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.cell:hover{background:var(--accent-soft)}
+.cell .cnt{font-family:var(--mono);font-size:18px;font-weight:500;font-variant-numeric:tabular-nums}
+.cell .from{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.cell.zero .cnt{color:var(--empty)}
+.cell.low{box-shadow:inset 0 -3px 0 var(--sand)}
+.cell.cheapest .from{color:var(--accent);font-weight:600}
+.cell[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.cell[aria-pressed="true"] .from,.cell[aria-pressed="true"] .cnt{color:var(--accent-ink)}
+.cell.na{color:var(--empty);font-size:12px;cursor:default}
+.cell.na:hover{background:none}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:14px;height:10px;border-radius:2px;display:inline-block}
+.cell.old .cnt,.cell.old .from{opacity:.55}
+.detail{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.detail-h{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px}
+.times{display:flex;flex-wrap:wrap;gap:8px}
+.t{border:1px solid var(--line);border-radius:6px;padding:6px 10px;display:flex;gap:8px;align-items:baseline;font-variant-numeric:tabular-nums;background:var(--bg)}
+.t .tt{font-family:var(--mono);font-weight:500}
+.t .tp{font-size:13px;color:var(--muted)}
+.t.deal{border-color:var(--accent)}
+.t.deal .tp{color:var(--accent);font-weight:600}
