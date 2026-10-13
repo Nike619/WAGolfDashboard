@@ -185,3 +185,12 @@ assert.equal(outlook([]), null);
 assert.equal(outlook([ok(), ok({ ground: 'soft' })], { ahead: true }).lines[0], '1 of 2 courses should be dry', 'tomorrow is a forecast');
 assert.equal(sky(0).label, 'Sunny'); assert.equal(sky(81).label, 'Showers'); assert.equal(sky(95).key, 'storm');
 console.log('Outlook tests passed.');
+
+// ---------- drainage source wording ----------
+import { drainSource } from '../src/model/soil.js';
+assert.equal(drainSource({ basis: 'soil' }, true), 'Soil survey');
+assert.equal(drainSource({ basis: 'blend', researched: 2 }), 'Golfer reports (2/5) averaged with the USDA soil survey');
+assert.equal(drainSource({ basis: 'research', confidence: 'high' }), 'High confidence, from golfer reports');
+assert.equal(drainSource({ confidence: 'medium' }, true), 'Golfer reports · medium', 'no soil data loaded: still labeled');
+assert.equal(drainSource({}), '');
+console.log('Drainage source tests passed.');

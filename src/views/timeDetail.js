@@ -6,6 +6,7 @@ import { dataAt, lowestPrice } from '../model/teetimes.js';
 import { state, pref } from '../state.js';
 import { times, wet, chance, bookLinkFor, sunset, frost } from '../select.js';
 import { frostText, frostWhen, drainWords } from './ui.js';
+import { drainSource } from '../model/soil.js';
 
 export function renderTimeDetail(priv) {
   const dlg = $('#detail');
@@ -34,7 +35,7 @@ export function renderTimeDetail(priv) {
         <div class="row"><span class="grow">Rain, 3 days before</span><span class="val">${w.prior.toFixed(2)}"</span></div>
         <div class="row"><span class="grow">Rain that day</span><span class="val">${w.day >= 0.01 ? `${w.day.toFixed(2)}"${esc(chance(c, d))}` : 'None expected'}</span></div>
         ${w.dried >= 0.01 ? `<div class="row"><span class="grow">Dried by sun and wind<span class="sub">Since the rain, over the same days</span></span><span class="val">${w.dried.toFixed(2)}"</span></div>` : ''}
-        <div class="row"><span class="grow">Drainage</span><span class="val">${drainWords(c.drainage.score)} (${c.drainage.score} of 5)</span></div>` : ''}
+        <div class="row"><span class="grow">Drainage<span class="sub">${esc(drainSource(c.drainage, true))}</span></span><span class="val">${drainWords(c.drainage.score)} (${c.drainage.score} of 5)</span></div>` : ''}
         ${thaw ? `<div class="row"><span class="grow">Frost delay</span><span class="val">${esc(frostText(c, d))}</span></div>` : ''}
         ${dusk ? `<div class="row"><span class="grow">Sunset</span><span class="val">${fmtT(dusk)}</span></div>` : ''}
         <button type="button" class="row chev" data-cd="${esc(c.id)}"><span class="grow">Course details</span></button>

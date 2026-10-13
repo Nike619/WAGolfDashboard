@@ -72,3 +72,13 @@ export function soakText(ksat) {
   if (ksat == null) return '';
   return ksat > 40 ? 'water soaks in very fast' : ksat >= 10 ? 'water soaks in fast' : ksat >= 4 ? 'water soaks in moderately' : ksat >= 1.4 ? 'water soaks in slowly' : 'water soaks in very slowly';
 }
+
+// Where a course's drainage score came from, worded the same everywhere it's shown.
+// short: for list columns ("Golfer reports", "Soil survey", "Reports + soil"); long: for sheets.
+export function drainSource(dr = {}, short = false) {
+  if (dr.basis === 'soil') return short ? 'Soil survey' : 'From the USDA soil survey; no golfer reports found';
+  if (dr.basis === 'blend') return short ? 'Reports + soil' : `Golfer reports (${dr.researched}/5) averaged with the USDA soil survey`;
+  if (!dr.confidence) return '';
+  const conf = dr.confidence[0].toUpperCase() + dr.confidence.slice(1);
+  return short ? `Golfer reports · ${dr.confidence}` : `${conf} confidence, from golfer reports`;
+}
